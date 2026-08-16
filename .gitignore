@@ -1,0 +1,13 @@
+# 敏感檔案 — 真 API key 永遠唔好 commit
+.credentials.yaml
+*.key
+*.pem
+.env
+
+# 本地 runtime 產物
+.dsh-vision-router/
+*.log
+node_modules/
+
+# 舊 zip（而家用 GitHub 唔用 zip）
+*.zip

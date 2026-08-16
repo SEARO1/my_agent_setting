@@ -1,0 +1,23 @@
+# dsh-setup-bundle: portable profile patch for a fresh DSH install.
+# Paths use !!js process.env.USERPROFILE so they work on any Windows machine.
+# REQUIRED: put the knowledge folder at <USERPROFILE>\dsh-kb\knowledge
+# (or edit the paths below / set KB_ROOT via env).
+
+# Enable session full-text search (FTS) in the Web UI sidebar.
+- id: session-query-sqlite
+  config:
+    path: !!js process.env.USERPROFILE + '\\.dsh\\storages\\session-fts.sqlite'
+    openAt: first-search
+
+# Knowledge base MCP server: semantic (vector) search over the knowledge folder.
+- insert:
+    - id: mcp-knowledge
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: knowledge
+        transport: stdio
+        command: node
+        args: [!!js process.env.USERPROFILE + '\\dsh-kb\\knowledge\\mcp-server\\server.mjs']
+        cwd: !!js process.env.USERPROFILE + '\\dsh-kb\\knowledge\\mcp-server'
+        env:
+          KB_ROOT: !!js process.env.USERPROFILE + '\\dsh-kb\\knowledge'
