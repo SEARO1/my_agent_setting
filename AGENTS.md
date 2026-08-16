@@ -20,10 +20,18 @@
    - 用 pwsh + Bing（`https://www.bing.com/search?q=...`）或 DuckDuckGo 嘅 HTML fallback 方法；
    - 或者直接 fetch 目標網站／docs 嘅原始頁面；
    - 唔好花時間試內置 web_search。
+5. **做嘢前先 check 現狀，唔好做無用功** — 接任何任務（尤其係 setup／安裝／配置／研究某工具）之前，**先檢查用戶環境係咪已經有呢樣嘢**：已裝 plugin（`~/.dsh/profiles/*/package.json` + node_modules）、已有 config（`settings.yaml`、`cordis.patch.yml`）、已有 skill、已裝 package 等。發現已經 setup 好就唔好重複做／唔好拆咗重裝／唔好由零開始研究，直接話俾用戶知現狀再問佢想點。教訓：2026-08-16 vision-router 事件 — 明明已裝好用緊，仲兜咗一大輪研究、改 config、del 再重裝。
 
-## 技術環境備忘（通用版）
-- `DSH_HOME` = `~/.dsh`：`settings.yaml`（模型/provider 設定）、`skills/`（skills）、`sessions/`（session transcripts）都喺呢度。
+## 打 Code 規則（寫 code 任務適用）
+- **DRY（Don't Repeat Yourself）** — 相同邏輯／代碼重複 2 次以上就要抽做共用 function／helper／元件，唔好 copy-paste；改嘢時見到重複 code 順手抽埋。
+- **YAGNI** — 唔好 over-engineering：淨係做而家需要嘅嘢，唔好整啲用唔著嘅抽象／架構。
+- 寫完 code 要自己 **verify**（跑 test／至少實際 run 一次），唔好話「應該得」就算。
+- 複雜改動先開 todo／寫 plan 再郁手，唔好一炮過亂改。
+- Commit message 用簡潔英文（`fix: ...` / `feat: ...` / `refactor: ...` 格式）。
+- 跟返 project 已有嘅 style／convention，唔好自己發明新風格。
+
+## 技術環境備忘
+- `DSH_HOME` = `~/.dsh`（即 `C:\Users\cheun\.dsh`）：`settings.yaml`（模型/provider 設定）、`skills/`（skills）、`sessions/`（session transcripts）都喺呢度。
 - DSH 真實 source code 喺 `~/.dsh/profiles/node_modules/@deepseek-ai/*`（例如 `dsh-agent-instructions`、`dsh-mcp-client`、`dsh-skill-filesystem`），研究 DSH 內部機制時直接去度睇。
 - 模型 provider 用 `OPENCODE_GO_API_KEY`（`~/.dsh/.credentials.yaml`），唔係 `DEEPSEEK_API_KEY`。
-- 知識庫（`knowledge/`）位置可以喺 `cordis.patch.yml` 嘅 mcp-knowledge row 改 `KB_ROOT`。
 - 改咗呢個檔案之後，新 session 會自動載入新內容；同一個 session 入面可以靠 touch（read/write/edit）觸發更新通知。
