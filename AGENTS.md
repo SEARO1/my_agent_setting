@@ -21,6 +21,9 @@
    - 或者直接 fetch 目標網站／docs 嘅原始頁面；
    - 唔好花時間試內置 web_search。
 5. **做嘢前先 check 現狀，唔好做無用功** — 接任何任務（尤其係 setup／安裝／配置／研究某工具）之前，**先檢查用戶環境係咪已經有呢樣嘢**：已裝 plugin（`~/.dsh/profiles/*/package.json` + node_modules）、已有 config（`settings.yaml`、`cordis.patch.yml`）、已有 skill、已裝 package 等。發現已經 setup 好就唔好重複做／唔好拆咗重裝／唔好由零開始研究，直接話俾用戶知現狀再問佢想點。教訓：2026-08-16 vision-router 事件 — 明明已裝好用緊，仲兜咗一大輪研究、改 config、del 再重裝。
+6. **做嘢前先 check memory** — 接任何任務之前（尤其係研究、安裝、配置、或者「整過嗰啲嘢」類型嘅任務），**先查 knowledge base / memory**（用 `kb_search`、或者 grep `Desktop/knowledge/`），睇下之前有冇相關 research、session digest、安裝記錄。發現已有記錄就唔好由零開始研究／重複做，直接引用返舊記錄、話俾用戶知現狀，再問佢想點。教訓：2026-08-16 Claude plugins 話題 — 用戶開口一句「check下你自己memory先」就係提醒我哋先查 RAG 知識庫。
+7. **裝嘢默認裝去 DSH** — 用戶喺呢個 session 叫裝任何嘢（skills、tools、plugins、scripts 等），**除非用戶特別指明目的地**（例如「裝去 Claude Code」/「裝去 `~/.claude`」），一律默認裝去 DSH 生態（`~/.dsh/` 底下，例如 skill 就 `~/.dsh/skills/<name>/SKILL.md`、repos 就 `~/.dsh/repos/`），唔好自行裝去 `~/.claude/`、其他 profile 或系統層面。教訓：diagram-design 安裝時用戶明講「就裝到 dsh 就行，沒必要裝到其他地方」。
+8. **Update 咗嘢要同步 `my_agent_setting` repo** — 一旦安裝／更新咗新 skill、改咗 config（`settings.yaml`、`cordis.patch.yml` 等）、更新咗 `AGENTS.md`、或者改咗 knowledge base，要**順手同步去 `Desktop/my_agent_setting/`**（即 `C:\Users\cheun\OneDrive\Desktop\my_agent_setting`，入面係 `~/.dsh/` + knowledge 嘅鏡像，方便搬機／還原／備份：有 `skills/`、`knowledge/`、`settings.yaml`、`AGENTS.md`）。同步完先當該 task 完成。教訓：2026-08-16 n8n skills — 裝咗 15 個 skills 但唔記得 sync 去 my_agent_setting。
 
 ## 打 Code 規則（寫 code 任務適用）
 - **DRY（Don't Repeat Yourself）** — 相同邏輯／代碼重複 2 次以上就要抽做共用 function／helper／元件，唔好 copy-paste；改嘢時見到重複 code 順手抽埋。

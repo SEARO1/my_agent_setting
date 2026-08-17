@@ -11,3 +11,4 @@ node_modules/
 
 # 舊 zip（而家用 GitHub 唔用 zip）
 *.zip
+_trash/
