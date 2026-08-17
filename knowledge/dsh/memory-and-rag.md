@@ -33,3 +33,9 @@ updated: 2026-08-16
 ## 6. 檔案系統（永遠可用）
 - read/write/edit/glob/grep 就係最簡單嘅 RAG
 - `knowledge/` 資料夾（Desktop）就係我哋嘅知識庫
+
+## 相關筆記
+- [[patterns]] — RAG 分層做法
+- [[memory-rag]] — OpenClaw 對照
+- [[session-log-format]] — session 資料格式
+- [[2026-08-16-dsh-rag-build]] — 呢套機制點建造

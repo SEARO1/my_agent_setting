@@ -35,3 +35,7 @@ updated: 2026-08-16
 - DSH 嘅 skills ≈ progressive disclosure（OpenClaw 都有 skills 系統）
 - 向量 RAG（memory-lancedb 級）喺 DSH = MCP server 或者 self-host 方案，係 optional 升級
 - 蒸餾概念（dreaming sweep：daily notes → MEMORY.md）→ 我哋 L4 嘅 session 蒸餾就係同一思路
+
+## 相關筆記
+- [[patterns]] — RAG 通用模式
+- [[memory-and-rag]] — DSH 嘅 6 個機制

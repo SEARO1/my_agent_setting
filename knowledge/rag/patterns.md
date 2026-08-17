@@ -23,3 +23,7 @@ updated: 2026-08-16
 - Raw transcript 唔好當知識庫（噪音多；OpenClaw 刻意唔自動注入 daily notes）
 - RAG 幫 recall 唔幫「懂」— 需要定期 distillation（OpenClaw dreaming sweep 概念）
 - 過大 context 反而 hurt performance（context rot）
+
+## 相關筆記
+- [[memory-and-rag]] — DSH 點落地呢啲模式
+- [[memory-rag]] — OpenClaw 嘅實作對照

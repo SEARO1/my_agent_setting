@@ -24,6 +24,23 @@ updated: 2026-08-16
 | `memory/` | 由 session 蒸餾出嚟嘅長期記憶（index.md 做目錄） |
 | `mcp-server/` | MCP 向量搜尋 server（kb_search/kb_reindex/kb_status，本地 embedding） |
 
+## 📚 筆記索引（Obsidian graph view 用）
+
+### 🔬 DSH 機制
+- [[agent-instructions]] — AGENTS.md 指令鏈
+- [[architecture]] — DSH 架構速覽
+- [[memory-and-rag]] — DSH 6 個記憶／檢索機制
+
+### 🦾 OpenClaw / RAG
+- [[memory-rag]] — OpenClaw memory/RAG 架構
+- [[patterns]] — Agent RAG 通用模式（分層做法）
+
+### 🔎 研究
+- [[session-log-format]] — DSH session log 格式（JSONL + zstd）
+
+### 🧠 蒸餾記憶
+- [[index]] — Memory 索引（4 篇蒸餾筆記 + 13 個 session digests）
+
 ## 常用操作
 - 搵嘢：`grep` 用 tags / 關鍵詞，`glob` 睇檔案結構
 - 加新知識：寫新檔，喺呢個 README 加一行
