@@ -24,3 +24,7 @@ updated: 2026-08-16
 - 用戶寫咗 `MacBook-DeepSeek-Harness-安裝教學.md`（Desktop，360 行，13 章節）俾非 programmer 朋友用
 - 關鍵資料：`npx -y @deepseek-ai/dsh web` 啟動、預設 `http://127.0.0.1:3080`、`--port` 可改、API key 喺網頁 Models 頁填（寫入 `~/.dsh/.credentials.yaml` 即時生效）
 - npm 最新版：`0.1.0-rc.6`，repo：`deepseek-ai/deepseek-harness`
+
+## 相關筆記
+- [[2026-08-15-n8n-opencode]] — 同一日嘅整合記錄
+- [[2026-08-16-dsh-rag-build]] — 之後起嘅 RAG

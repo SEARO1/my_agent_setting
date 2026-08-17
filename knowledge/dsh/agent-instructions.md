@@ -23,3 +23,7 @@ updated: 2026-08-16
 - `~/.dsh/AGENTS.md` = OpenClaw 嘅 USER.md/MEMORY.md 對應物（always-on context）
 - 想永遠記住嘅嘢 → 寫入 `~/.dsh/AGENTS.md`（但要精簡，每個 session 都食 token）
 - 詳細知識 → skills 或 knowledge/ 資料夾（on-demand，唔會長期佔 context）
+
+## 相關筆記
+- [[memory-and-rag]] — AGENTS.md 係 6 個記憶機制之一
+- [[2026-08-16-dsh-rag-build]] — 知識庫建造過程

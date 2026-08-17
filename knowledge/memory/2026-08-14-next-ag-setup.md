@@ -19,3 +19,7 @@ updated: 2026-08-16
 - 用戶要求 API key 只放 `~/.dsh/.credentials.yaml`（同 `~/.claude/scripts/.env`），唔好寫入其他檔
 - 有 `claude-vision-skill` folder 喺 home（`C:\Users\cheun\claude-vision-skill`）
 - 用戶試過 Docker 化，但最後用返 local（3080）
+
+## 相關筆記
+- [[2026-08-15-dsh-history]] — 之後嘅 DSH 研究雜項
+- [[2026-08-16-dsh-rag-build]] — 之後起嘅 RAG 知識庫

@@ -32,3 +32,7 @@ updated: 2026-08-16
 - Permission presets：`read-only` / `workspace-write` / `danger-full-access`
 - Approval policy：`danger-full-access` → `never`（現時設定）
 - Sandbox：Windows 行 `pwsh-sandbox`（read-only mode 下行 ConstrainedLanguage）
+
+## 相關筆記
+- [[agent-instructions]] — 指令系統
+- [[session-log-format]] — session 資料格式

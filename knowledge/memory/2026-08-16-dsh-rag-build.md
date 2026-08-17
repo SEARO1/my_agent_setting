@@ -33,3 +33,8 @@ updated: 2026-08-16
   - 驗證（第二次 restart 後）：server.mjs spawn 成功 + kb_status/kb_search 直接 call 到，語義搜尋正常
 - 驗證：中文/英文 query 都正常（「AGENTS.md 點樣自動載入」→ dsh/agent-instructions.md）
 - 加咗 knowledge 檔之後要 `kb_reindex` 先搜到新內容
+
+## 相關筆記
+- [[memory-and-rag]] — 6 個記憶機制總覽
+- [[session-log-format]] — session 資料係蒸餾來源
+- [[index]] — memory 索引

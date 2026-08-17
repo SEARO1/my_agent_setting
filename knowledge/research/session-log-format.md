@@ -32,3 +32,7 @@ updated: 2026-08-16
 ## 用途
 - 蒸餾：`user/message`（source.kind=user）+ `assistant/message`（text parts）→ 摘要入 knowledge/
 - Session report：同 session-report skill（Claude Code 版）概念一樣，但佢食 `~/.claude/projects`，唔食 DSH 呢個格式
+
+## 相關筆記
+- [[memory-and-rag]] — session 全文搜尋係機制之一
+- [[2026-08-16-dsh-rag-build]] — 呢啲 session log 係蒸餾來源

@@ -22,3 +22,7 @@ updated: 2026-08-16
 - HTTP node 同 SSE reader 打緊唔同 server（一個 hosted 一個 local）→ session id 對唔上
 - Body 唔係 chat-completions 格式
 - Bearer key 要正確放 header
+
+## 相關筆記
+- [[2026-08-15-dsh-history]] — 同一日嘅 DSH 研究
+- [[index]] — memory 索引
