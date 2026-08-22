@@ -179,4 +179,49 @@ Tools（模型直接 call）：
 - OpenCode Zen Go 冇 /embeddings — 本地模型先得
 
 ---
-*Generated 2026-08-16 by DSH agent. 配合 dsh-setup-bundle.zip 使用。*
+
+# 13. OpenViking 記憶系統（2026-08-22 起，取代舊 MCP 向量 server）
+
+詳細研究記錄：knowledge/openviking/openviking-overview.md。
+
+## 13.1 安裝（新裝置）
+
+1. Python 3.10+（實測 3.13）：pip install openviking + openviking[local-embed]
+2. Config ~/.openviking/ov.conf
+3. ~/.openviking/ovcli.conf = JSON 格式！{"url":"http://127.0.0.1:1933"}（新版要 JSON，YAML 會 parse 失敗）
+4. 開 server：~/.openviking/start-ov.bat（set 3 條 key env）
+5. 驗證：openviking-server doctor
+
+## 13.2 ov.conf 模板（3-provider VLM failover）
+
+~/.openviking/ov.conf 用 credentials array，index 0 最高優先：
+1. opencode-go → https://opencode.ai/zen/go/v1 → deepseek-v4-flash
+2. deepseek 官方 → https://api.deepseek.com/v1 → deepseek-chat
+3. POE → https://api.poe.com/v1 → DeepSeek-V4-Flash
+
+**重點坍**：ov.conf 用 env var 展開，但只有 server process 環境有單個 env var 先展開到。一定要用 start-ov.bat（set 齊 3 條 key）開 server，否則變空 → 401。
+Failover 行為：401/403/429/5xx 自動 fallback 下一個 credential；400/content-safety fail-fast。約 10 分鐘後試跳返高優先級。
+
+## 13.3 start-ov.bat + 開機自動啟動
+
+- ~/.openviking/start-ov.bat：set OPENCODE_GO_API_KEY / DEEPSEEK_API_KEY / POE_API_KEY → 開 openviking-server
+- ~/.openviking/start-ov-hidden.vbs：隱藏視窗 launcher
+- Task Scheduler「OpenViking Server」：At logon，Run As 自己 user（唔使 admin）
+
+建立 task（PowerShell）：
+schtasks /create /tn "OpenViking Server" /tr "wscript.exe C:\Users\<you>\.openviking\start-ov-hidden.vbs" /sc onlogon /rl limited /f
+
+## 13.4 DSH 接入
+
+1. 裝 plugin（web profile）：dsh plugin --profile web add @openviking/dsh-memory-plugin
+2. 重啟 DSH → 新 session 有 mcp__openviking__* tools + openviking-memory skill + 自動 recall 注入
+3. cordis.patch.yml：舊 mcp-knowledge 已 disabled（遷移去 OpenViking）
+
+## 13.5 知識庫遷移
+
+- 舊 Desktop/knowledge/ 內容全數 import 入 OpenViking（resources/knowledge 樹下）
+- 舊 KB + mcp-server 保留（哲 delete），只在 cordis.patch.yml disable 哲
+- 新知識寫入：用 OpenViking MCP tools（remember / add_resource），或照舊寫 knowledge/ 再 import
+
+---
+*Generated 2026-08-16 by DSH agent（2026-08-22 更新加入 OpenViking 章節）. 配合 dsh-setup-bundle.zip 使用.*

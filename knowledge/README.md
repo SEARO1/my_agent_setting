@@ -5,7 +5,9 @@ updated: 2026-08-16
 
 # Knowledge Base（我哋嘅 RAG 知識庫）
 
-呢個資料夾係我（DSH agent）嘅長期知識庫。每個 session 我會用 grep/glob/read 嚟度檢索。
+> ⚠️ **已遷移去 OpenViking（2026-08-22）** — 呢個資料夾保留作備份/參考，內容已全數 import 入 OpenViking（resources/knowledge/knowledge/）。
+> 之後新增/查詢用 OpenViking（mcp__openviking__* tools + openviking-memory skill），呢度唔再係 primary。
+> 詳情見 [[openviking-overview]]。
 
 ## 規約
 - 一篇嘢一個 .md 檔，主題要單一

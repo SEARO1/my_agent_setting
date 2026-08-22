@@ -12,3 +12,6 @@ node_modules/
 # 舊 zip（而家用 GitHub 唔用 zip）
 *.zip
 _trash/
+
+# 会話 transcript（私隱，不 commit）
+session_*.jsonl

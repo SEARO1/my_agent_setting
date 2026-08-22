@@ -8,11 +8,22 @@
 |---|---|---|
 | `AGENTS.md` | 用戶全域指令（每個 session 自動載入） | `~/.dsh/AGENTS.md` |
 | `settings.yaml` | 模型/provider 設定 | `~/.dsh/settings.yaml` |
-| `cordis.patch.yml` | Profile patch（FTS/MCP） | `~/.dsh/profiles/web/cordis.patch.yml` |
-| `credentials.template.yaml` | API key 模板（填你嘅 key） | `~/.dsh/.credentials.yaml` |
-| `skills/` | 53 個 skills | `~/.dsh/skills/` |
-| `knowledge/` | 知識庫 + MCP server + scripts | `<USERPROFILE>/dsh-kb/knowledge/` |
+| `cordis.patch.yml` | Profile patch（FTS/OpenViking） | `~/.dsh/profiles/web/cordis.patch.yml` |
+| `credentials.template.yaml` | API key 模板（OPENCODE+POE+DEEPSEEK） | `~/.dsh/.credentials.yaml` |
+| `ov.conf.template` | OpenViking server 設定模板 | `~/.openviking/ov.conf` |
+| `start-ov.bat.template` / `start-ov-hidden.vbs.template` | OpenViking 啟動 + 隱藏 launcher 模板 | `~/.openviking/` |
+| `skills/` | 65 個 skills | `~/.dsh/skills/` |
+| `knowledge/` | 知識庫（已遷移 OpenViking，保留備份） | `<USERPROFILE>/dsh-kb/knowledge/` |
 | `DSH-Setup-Guide.md` | 完整說明文件 | 自己睇 |
+
+## 記憶/知識庫：OpenViking（2026-08-22 起）
+
+**記憶/知識庫已遷移去 OpenViking**（取代舊 mcp-knowledge 向量 server）：
+- OpenViking server：port 1933，local embedding（bge-small-zh，CPU，唔掂 GPU）
+- VLM failover：opencode-go → deepseek 官方 → POE（3 條 key 都喺 credentials.template）
+- DSH plugin：`@openviking/dsh-memory-plugin`（自動 recall + capture）
+- 開機自動啟動：Task Scheduler「OpenViking Server」（登入時行 start-ov-hidden.vbs → start-ov.bat）
+- 完整安裝/設定見 `DSH-Setup-Guide.md` §13-14 + `knowledge/openviking/openviking-overview.md`
 
 ## 安裝步驟
 

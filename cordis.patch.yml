@@ -9,15 +9,8 @@
     path: !!js process.env.USERPROFILE + '\\.dsh\\storages\\session-fts.sqlite'
     openAt: first-search
 
-# Knowledge base MCP server: semantic (vector) search over the knowledge folder.
-- insert:
-    - id: mcp-knowledge
-      name: '@deepseek-ai/dsh-mcp-client'
-      config:
-        serverName: knowledge
-        transport: stdio
-        command: node
-        args: [!!js process.env.USERPROFILE + '\\dsh-kb\\knowledge\\mcp-server\\server.mjs']
-        cwd: !!js process.env.USERPROFILE + '\\dsh-kb\\knowledge\\mcp-server'
-        env:
-          KB_ROOT: !!js process.env.USERPROFILE + '\\dsh-kb\\knowledge'
+# Knowledge base MCP server: MIGRATED to OpenViking (2026-08-22). Disabled.
+# Old KB + mcp-server kept (not deleted). Use mcp__openviking__* tools + openviking-memory skill.
+# OpenViking server: ~/.openviking/start-ov.bat (port 1933), plugin @openviking/dsh-memory-plugin.
+- id: mcp-knowledge
+  disabled: true

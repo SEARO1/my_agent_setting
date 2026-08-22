@@ -1,0 +1,21 @@
+{
+  "default_account": "default",
+  "default_user": "default",
+  "embedding": {
+    "dense": { "provider": "local", "model": "bge-small-zh-v1.5-f16" }
+  },
+  "vlm": {
+    "provider": "openai",
+    "model": "deepseek-v4-flash",
+    "credentials": [
+      { "id": "opencode-go", "provider": "openai", "model": "deepseek-v4-flash", "api_base": "https://opencode.ai/zen/go/v1", "api_key": "${OPENCODE_GO_API_KEY}" },
+      { "id": "deepseek-official", "provider": "openai", "model": "deepseek-chat", "api_base": "https://api.deepseek.com/v1", "api_key": "${DEEPSEEK_API_KEY}" },
+      { "id": "poe", "provider": "openai", "model": "DeepSeek-V4-Flash", "api_base": "https://api.poe.com/v1", "api_key": "${POE_API_KEY}" }
+    ]
+  },
+  "storage": {
+    "workspace": "C:\\Users\\<you>\\.openviking\\data",
+    "agfs": { "backend": "local" },
+    "vectordb": { "backend": "local" }
+  }
+}

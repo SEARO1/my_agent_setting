@@ -1,0 +1,9 @@
+@echo off
+REM OpenViking server launcher - sets provider API keys then starts the server
+REM Auto-fallback chain: opencode-go -> deepseek-official -> poe
+
+set OPENCODE_GO_API_KEY=YOUR_OPENCODE_KEY
+set DEEPSEEK_API_KEY=YOUR_DEEPSEEK_KEY
+set POE_API_KEY=YOUR_POE_KEY
+
+"C:\Users\<you>\AppData\Local\Programs\Python\Python313\Scripts\openviking-server.exe" %*

@@ -1,7 +1,7 @@
 ui-onboarding:
   welcomeNoticeVersion: 2026-08-13.1
 locale:
-  preference: en
+  preference: zh
 agent-presets:
   default: code
 llm-pi-ai:
@@ -73,9 +73,35 @@ llm-pi-ai:
           contextWindow: 500000
           maxTokens: 500000
       apiKeyEnv: OPENCODE_GO_API_KEY
+    poe:
+      apiKeyEnv: POE_API_KEY
+      api: openai-completions
+      baseURL: https://api.poe.com/v1
+      reasoning: high
+      models:
+        - id: DeepSeek-V4-Flash
+          contextWindow: 1000000
+          maxTokens: 384000
+          reasoningEfforts:
+            off: null # POE 係咪真係接受 "off" 唔確定，null 代表「唔送」
+            high: high
+            max: max
+          compat:
+            thinkingFormat: deepseek # DeepSeek 系 API 用 thinking:{type} + reasoning_effort
+            supportsReasoningEffort: true
+        - id: DeepSeek-V4-Pro
+          contextWindow: 1000000
+          maxTokens: 384000
+          reasoningEfforts:
+            off: null # POE 係咪真係接受 "off" 唔確定，null 代表「唔送」
+            high: high
+            max: max
+          compat:
+            thinkingFormat: deepseek # DeepSeek 系 API 用 thinking:{type} + reasoning_effort
+            supportsReasoningEffort: true
 agent-default-model:
-  provider: opencode-go
-  model: deepseek-v4-flash
+  provider: poe-vision
+  model: DeepSeek-V4-Flash
   reasoningEffort: max
 ui-conversation:
   busyEnter: steer
@@ -83,7 +109,36 @@ dsh-dafeiyu:
   scale: 1
   activityLevel: lively
   includeSubagents: true
+  enabled: true
+ui-theme:
+  preference: dark
 vision-router:
-  providers:
-    - provider: opencode-go
-      model: kimi-k3
+  onboardingSeen: true
+  tool: false
+pet:
+  visible: false
+  size: 160
+  right: 1231
+  bottom: 148
+  petId: whale-girl
+  enabled: false
+skin-background:
+  enabled: true
+remote-web-ui:
+  enabled: false
+  requirePairingForLan: false
+aionui-panel:
+  enabled: false
+llm-deepseek:
+  models:
+    - id: deepseek-v4-flash
+      name: DeepSeek-V4-Flash
+      contextWindow: 1000000
+    - id: deepseek-v4-pro
+      name: DeepSeek-V4-Pro
+      contextWindow: 1000000
+    - id: deepseek-v4-flash-vision-exp
+      name: DeepSeek-V4-Flash-Vision
+      contextWindow: 1000000
+      maxTokens: 384000
+      inputModalities: [ text, image ]
