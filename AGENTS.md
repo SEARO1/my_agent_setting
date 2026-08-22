@@ -25,6 +25,7 @@
 8. **Update 咗嘢要同步 `my_agent_setting` repo** — 一旦安裝／更新咗新 skill、改咗 config（`settings.yaml`、`cordis.patch.yml` 等）、更新咗 `AGENTS.md`、或者改咗 knowledge base，要**順手同步去 `Desktop/my_agent_setting/`**（即 `C:\Users\cheun\OneDrive\Desktop\my_agent_setting`，入面係 `~/.dsh/` + knowledge 嘅鏡像，方便搬機／還原／備份：有 `skills/`、`knowledge/`、`settings.yaml`、`AGENTS.md`）。同步完先當該 task 完成。教訓：2026-08-16 n8n skills — 裝咗 15 個 skills 但唔記得 sync 去 my_agent_setting。
 9. **Workspace 有 `AGENTS.md` 就優先跟佢** — 如果而家嘅 workspace（cwd）入面有 `AGENTS.md`，就**優先跟 workspace 嗰個**；呢個 global 檔案只係 base／fallback。兩邊規則衝突時，以 workspace 嘅 `AGENTS.md` 為準。
 10. **Budget-conscious（窮鬼／超慳）** — 用戶自認「究極窮鬼，就嚟養唔起大肥魚（DeepSeek）」。任何涉及 pricing／訂閱／API 費用／模型選擇嘅建議，**一律由 free tier（免費層）出發**，再考慮 CP 值（性價比）高嘅選項；**唔好一嚟就推薦最貴／最高級 plan**，亦唔好假設用戶會自願課金。做任何會產生持續費用嘅嘢之前，先諗有冇免費替代（本地模型、free tier、現有 key 等）。
+11. **Knowledge 由 OpenViking 自動管理** — 唔使再手動寫／更新 knowledge 筆記（`knowledge/` 目錄・`viking://resources/knowledge`）——所有知識靠 OpenViking session capture 自動記錄（events/entities/preferences），要查就用 `mcp__openviking__*` tools。舊筆記留低做 reference，唔好刪。決定日：2026-08-22。
 
 ## 打 Code 規則（寫 code 任務適用）
 - **DRY（Don't Repeat Yourself）** — 相同邏輯／代碼重複 2 次以上就要抽做共用 function／helper／元件，唔好 copy-paste；改嘢時見到重複 code 順手抽埋。
