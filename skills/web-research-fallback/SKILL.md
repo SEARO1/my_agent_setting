@@ -1,12 +1,12 @@
 ---
 name: web-research-fallback
-description: 上網 research 嘅 fallback 方法 — DSH 內置 web_search 工具冇 API key（DEEPSEEK_API_KEY 未配置），要用 pwsh + Bing HTML 解析或者直接 fetch 目標網站。當需要上網查資料、睇 docs、搜尋文章時使用。
-whenToUse: 用戶要求上網 research、搵資料、睇官方 docs、搜尋某個技術方案。唔好用內置 web_search。
+description: 上網 research 嘅 fallback 方法 — 當 DSH 內置 web_search 工具失敗／backend 唔可用時，用 pwsh + Bing HTML 解析或者直接 fetch 目標網站。當需要上網查資料、睇 docs、搜尋文章時使用。
+whenToUse: web_search 工具報錯／backend down／結果異常時先用；平時上網 research 直接用內置 web_search（已有 Exa backend）。
 ---
 
 # Web Research Fallback（pwsh + Bing / 直接 fetch）
 
-**背景**：DSH 內置 `web_search` 需要 `DEEPSEEK_API_KEY`，用戶冇放 key → 直接失敗。上網一律用以下方法。
+**背景**：DSH 內置 `web_search` 已有 Exa backend（free tier，見 DSH-Setup-Guide.md），實測正常 work，平時直接用好唔使 fallback。以下方法淨係喺 `web_search` 失敗／backend 唔可用時先用。
 
 ## 方法 A：Bing HTML 搜尋（pwsh）
 ```powershell
