@@ -105,11 +105,6 @@ agent-default-model:
   reasoningEffort: max
 ui-conversation:
   busyEnter: steer
-dsh-dafeiyu:
-  scale: 1
-  activityLevel: lively
-  includeSubagents: true
-  enabled: true
 ui-theme:
   preference: dark
 vision-router:

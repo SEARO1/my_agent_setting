@@ -20,7 +20,7 @@ updated: 2026-08-16
 
 ## Cordis 組合式架構
 - DSH 用 Cordis 插件系統：`dsh-base` 定義核心 rows（每個 row = 一個插件 instance + config）
-- Profile = 多個 bundle 疊加（`@deepseek-ai/dsh-base` + `dsh-web-app` + `dsh-dafeiyu` + `dsh-vision-router`）
+- Profile = 多個 bundle 疊加（`@deepseek-ai/dsh-base` + `dsh-web-app` + `dsh-vision-router` 等）
 - 用戶 patch 層：`~/.dsh/profiles/web/cordis.patch.yml` — **patch 會成個替換 row 嘅 config，唔係 merge**（最後寫入者贏）
 - **⚠️ Patch 語法三種形式**（loader 只認呢三種）：
   1. `- id: X` + `config:` — **override 現有 row**（row 一定要已存在，例如 base bundle 有）

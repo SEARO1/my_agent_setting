@@ -15,3 +15,6 @@ _trash/
 
 # 会話 transcript（私隱，不 commit）
 session_*.jsonl
+
+# 舊 KB 向量索引（可重建，舊 mcp-knowledge 已移除）
+kb-index.json
