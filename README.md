@@ -9,7 +9,7 @@
 | `AGENTS.md` | 用戶全域指令（每個 session 自動載入） | `~/.dsh/AGENTS.md` |
 | `settings.yaml` | 模型/provider 設定 | `~/.dsh/settings.yaml` |
 | `cordis.patch.yml` | Profile patch（FTS/OpenViking） | `~/.dsh/profiles/web/cordis.patch.yml` |
-| `credentials.template.yaml` | API key 模板（OPENCODE+POE+DEEPSEEK） | `~/.dsh/.credentials.yaml` |
+| `credentials.template.yaml` | API key 模板（OPENCODE+POE+DEEPSEEK+EXA） | `~/.dsh/.credentials.yaml` |
 | `ov.conf.template` | OpenViking server 設定模板 | `~/.openviking/ov.conf` |
 | `start-ov.bat.template` / `start-ov-hidden.vbs.template` | OpenViking 啟動 + 隱藏 launcher 模板 | `~/.openviking/` |
 | `skills/` | 65 個 skills | `~/.dsh/skills/` |
@@ -24,6 +24,7 @@
 - DSH plugin：`@openviking/dsh-memory-plugin`（自動 recall + capture）
 - 開機自動啟動：Task Scheduler「OpenViking Server」（登入時行 start-ov-hidden.vbs → start-ov.bat）
 - 完整安裝/設定見 `DSH-Setup-Guide.md` §13-14 + `knowledge/openviking/openviking-overview.md`
+- **Web search**：`@deepseek-ai/dsh-web-search-exa`（pin 0.1.1-rc.2）+ `searchProvider: exa`（free tier，DSH-Setup-Guide §14）
 
 ## 安裝步驟
 

@@ -224,4 +224,56 @@ schtasks /create /tn "OpenViking Server" /tr "wscript.exe C:\Users\<you>\.openvi
 - 新知識寫入：用 OpenViking MCP tools（remember / add_resource），或照舊寫 knowledge/ 再 import
 
 ---
-*Generated 2026-08-16 by DSH agent（2026-08-22 更新加入 OpenViking 章節）. 配合 dsh-setup-bundle.zip 使用.*
+
+# 14. Exa Web Search（2026-08-22 起，DSH 預設 web_search provider）
+
+## 14.1 背景
+
+DSH 嘅 web_search 用「web capability seam」（ctx.web）：`dsh-tool-web` 提供 `web_search`/`web_fetch` tools，實際搜尋由註冊嘅 provider 做。預設得 `dsh-web-search-deepseek`（每次 = 一次完整 DeepSeek model call，貴）。Exa 係專用 SERP API（free tier $20 開戶 + $10/月），一次 search ~$0.007，平好多。
+
+## 14.2 裝（新裝置）
+
+⚠️ 一定要 pin 0.1.1-rc.2！npm latest 標籤指住 0.0.1-rc.1（壞版，import 未 publish 嘅 @deepseek-ai/dsh-environment）
+
+```bash
+dsh plugin --profile web add @deepseek-ai/dsh-web-search-exa@0.1.1-rc.2
+```
+
+## 14.3 加 API key
+
+註冊 https://exa.ai（free tier），攞 API key，放入 ~/.dsh/.credentials.yaml：
+
+```yaml
+EXA_API_KEY: 你嘅 key
+```
+
+## 14.4 Patch（cordis.patch.yml）
+
+```yaml
+- insert:
+    - id: web-search-exa
+      name: '@deepseek-ai/dsh-web-search-exa'
+      config:
+        apiKey: !!js process.env.EXA_API_KEY   # 或者寫真 key
+        searchType: auto
+- id: web
+  config:
+    searchProvider: exa   # 因為 deepseek + exa 兩個 provider 都在，唔 pin 會 WEB_PROVIDER_AMBIGUOUS
+```
+
+## 14.5 驗證
+
+1. `dsh --profile web --dump-config` 見到 web-search-exa row + searchProvider: exa
+2. 重啟 DSH
+3. 新 session 叫 web_search → 應該返 Exa sources
+4. Provider 直接測試（modules 層面）：import { ExaSearchProvider } from "@deepseek-ai/dsh-web-search-exa" → new ExaSearchProvider({ apiKey, searchType: "auto" }) → await p.search({ query, maxResults })
+
+## 14.6 坑
+
+- npm latest = 0.0.1-rc.1 壞版：import @deepseek-ai/dsh-environment（未 publish）→ ERR_MODULE_NOT_FOUND。一定要 pin @0.1.1-rc.2（改用 dsh-launch-environment）。
+- 兩個 provider 同時註冊但冇 pin → WEB_PROVIDER_AMBIGUOUS。
+- DeepSeek search provider 留作 fallback（web-search-deepseek row 唔使刪）。
+
+---
+
+*Generated 2026-08-16 by DSH agent（2026-08-22 更新：§13 OpenViking + §14 Exa）. 配合 dsh-setup-bundle.zip 使用.*
