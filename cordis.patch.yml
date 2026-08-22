@@ -9,8 +9,6 @@
     path: !!js process.env.USERPROFILE + '\\.dsh\\storages\\session-fts.sqlite'
     openAt: first-search
 
-# Knowledge base MCP server: MIGRATED to OpenViking (2026-08-22). Disabled.
-# Old KB + mcp-server kept (not deleted). Use mcp__openviking__* tools + openviking-memory skill.
+# Knowledge base MCP server: REMOVED - MIGRATED to OpenViking (2026-08-22).
+# Old KB + mcp-server kept in place (not deleted). Use mcp__openviking__* tools + openviking-memory skill.
 # OpenViking server: ~/.openviking/start-ov.bat (port 1933), plugin @openviking/dsh-memory-plugin.
-- id: mcp-knowledge
-  disabled: true
