@@ -46,3 +46,9 @@
 - settings.yaml pet 段：enabled: false → true、visible: false → true（fix 死顯示；位置 size/right/bottom 已固定）
 - pet.json display.visible → true
 - 原因：每次開 DSH 都唔見條魚（隱藏設定）
+
+### dsh-dafeiyu 減動態 fix（2026-08-22 續）
+- activityLevel: lively → quiet（最靜）
+- reducedMotion: true（減少動態效果）
+- pet.enabled/visible → true（已喺上次 fix）
+- 同步 settings.yaml 去 repo（agent-default-model 都更新咗做 opencode-go-vision）

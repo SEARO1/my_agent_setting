@@ -100,23 +100,29 @@ llm-pi-ai:
             thinkingFormat: deepseek # DeepSeek 系 API 用 thinking:{type} + reasoning_effort
             supportsReasoningEffort: true
 agent-default-model:
-  provider: poe-vision
-  model: DeepSeek-V4-Flash
+  provider: opencode-go-vision
+  model: deepseek-v4-flash
   reasoningEffort: max
 ui-conversation:
   busyEnter: steer
+dsh-dafeiyu:
+  scale: 1
+  activityLevel: quiet
+  reducedMotion: true
+  includeSubagents: true
+  enabled: true
 ui-theme:
   preference: dark
 vision-router:
   onboardingSeen: true
   tool: false
 pet:
-  visible: false
+  visible: true
   size: 160
   right: 1231
   bottom: 148
   petId: whale-girl
-  enabled: false
+  enabled: true
 skin-background:
   enabled: true
 remote-web-ui:
