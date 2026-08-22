@@ -12,3 +12,18 @@
 # Knowledge base MCP server: REMOVED - MIGRATED to OpenViking (2026-08-22).
 # Old KB + mcp-server kept in place (not deleted). Use mcp__openviking__* tools + openviking-memory skill.
 # OpenViking server: ~/.openviking/start-ov.bat (port 1933), plugin @openviking/dsh-memory-plugin.
+
+# Exa web search provider (free tier) - install: dsh plugin --profile web add @deepseek-ai/dsh-web-search-exa@0.1.1-rc.2
+# (MUST pin @0.1.1-rc.2: npm 'latest' 0.0.1-rc.1 is broken - imports unpublished @deepseek-ai/dsh-environment)
+# EXA_API_KEY lives in ~/.dsh/.credentials.yaml, never commit the real key here.
+- insert:
+    - id: web-search-exa
+      name: '@deepseek-ai/dsh-web-search-exa'
+      config:
+        apiKey: !!js process.env.EXA_API_KEY
+        searchType: auto
+
+# Pin Exa as the active search provider (deepseek + exa both registered - must pick one or WEB_PROVIDER_AMBIGUOUS).
+- id: web
+  config:
+    searchProvider: exa
