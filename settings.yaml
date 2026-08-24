@@ -1,7 +1,7 @@
 ui-onboarding:
   welcomeNoticeVersion: 2026-08-13.1
 locale:
-  preference: zh
+  preference: en
 agent-presets:
   default: code
 llm-pi-ai:
@@ -77,7 +77,7 @@ llm-pi-ai:
       apiKeyEnv: POE_API_KEY
       api: openai-completions
       baseURL: https://api.poe.com/v1
-      reasoning: high
+      reasoning: high # route 級 default thinking level（可選）
       models:
         - id: DeepSeek-V4-Flash
           contextWindow: 1000000
@@ -99,47 +99,23 @@ llm-pi-ai:
           compat:
             thinkingFormat: deepseek # DeepSeek 系 API 用 thinking:{type} + reasoning_effort
             supportsReasoningEffort: true
+        - id: GPT-5.6-Sol
+        - id: GPT-5.6-Terra
+        - id: GPT-5.6-Luna
 agent-default-model:
   provider: opencode-go-vision
   model: deepseek-v4-flash
   reasoningEffort: max
 ui-conversation:
   busyEnter: steer
-dsh-dafeiyu:
-  scale: 1
-  activityLevel: quiet
-  reducedMotion: true
-  includeSubagents: true
-  enabled: true
 ui-theme:
   preference: dark
+dsh-dafeiyu:
+  scale: 1
+  activityLevel: lively
+  includeSubagents: true
 vision-router:
+  providers:
+    - provider: opencode-go
+      model: qwen3.7-plus
   onboardingSeen: true
-  tool: false
-pet:
-  visible: true
-  size: 160
-  right: 1231
-  bottom: 148
-  petId: whale-girl
-  enabled: true
-skin-background:
-  enabled: true
-remote-web-ui:
-  enabled: false
-  requirePairingForLan: false
-aionui-panel:
-  enabled: false
-llm-deepseek:
-  models:
-    - id: deepseek-v4-flash
-      name: DeepSeek-V4-Flash
-      contextWindow: 1000000
-    - id: deepseek-v4-pro
-      name: DeepSeek-V4-Pro
-      contextWindow: 1000000
-    - id: deepseek-v4-flash-vision-exp
-      name: DeepSeek-V4-Flash-Vision
-      contextWindow: 1000000
-      maxTokens: 384000
-      inputModalities: [ text, image ]
