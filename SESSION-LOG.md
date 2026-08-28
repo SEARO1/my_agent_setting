@@ -52,3 +52,19 @@
 - reducedMotion: true（減少動態效果）
 - pet.enabled/visible → true（已喺上次 fix）
 - 同步 settings.yaml 去 repo（agent-default-model 都更新咗做 opencode-go-vision）
+
+
+## 2026-08-23 — 安裝 mattpocock/skills（全部 37 個）入 DSH
+
+### 研究
+- 睇咗 https://github.com/mattpocock/skills（Matt Pocock，Total TypeScript 作者）— agent skills 集，主打 real engineering
+- 設計哲學：細、可改、可組合；user-invoked vs model-invoked 二分；CONTEXT.md shared language + ADR；grilling 流程
+- 其他安裝法：Claude Code plugin（`claude plugins install mattpocock-skills`，官方 marketplace）或 `npx skills@latest add mattpocock/skills`
+
+### 安裝（用戶指令：直接全部裝）
+- Copy 全部 37 個 skill folders（engineering 18 + productivity 7 + misc 4 + in-progress 8）入 `~/.dsh/skills/`
+- 零撞名；用 git openssl backend workaround clone（schannel SEC_E_NO_CREDENTIALS 問題）
+- DSH 已 hot-reload：15 個 model-invoked skills 出現喺 catalog（tdd、code-review、grilling、research、prototype、diagnosing-bugs、codebase-design、domain-modeling、resolving-merge-conflicts、writing-for-agents、wizard、git-guardrails-claude-code、migrate-to-shoehorn、scaffold-exercises、setup-pre-commit）
+- User-invoked skills（disable-model-invocation: true，如 grill-me、handoff、ask-matt、to-spec、to-tickets、triage、wayfinder、implement、teach、wait-what 等 22 個）按設計唔會俾 model 自動調用
+- Sync 去 my_agent_setting mirror（skills/ +37 folders）
+
