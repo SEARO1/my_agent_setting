@@ -102,6 +102,12 @@ llm-pi-ai:
         - id: GPT-5.6-Sol
         - id: GPT-5.6-Terra
         - id: GPT-5.6-Luna
+    azure-openai-responses:
+      apiKeyEnv: AZURE_OPENAI_API_KEY
+      baseURL: https://veserveazureai.openai.azure.com/
+      displayName: Azure GPT-5.6
+      models:
+        - id: gpt-5.6-sol
 agent-default-model:
   provider: opencode-go-vision
   model: deepseek-v4-flash
