@@ -144,4 +144,11 @@ llm-deepseek:
       name: DeepSeek-V4-Flash-Vision
       contextWindow: 1000000
       maxTokens: 384000
-      inputModalities: [ text, image ]
+      inputModalities:
+        - text
+        - image
+    - id: deepseek-v4.1-flash-expires-on-0910
+      name: DeepSeek-V4.1-Flash
+      inputModalities:
+        - text
+        - image
