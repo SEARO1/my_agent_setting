@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+const target = process.argv[2];
+const source = fs.readFileSync(target, 'utf8');
+const start = source.indexOf('function requestHeaders(');
+const end = source.indexOf('\n}', start) + 2;
+const fn = vm.runInNewContext('(' + source.slice(start, end) + ')', {attributionHeaders: () => ({'user-agent': 'deepseek-harness/test'})});
+assert.equal(fn({}, 'session-one')['x-deepseek-harness-session-id'], 'session-one');
+assert.equal(fn({}, 'session-two')['x-deepseek-harness-session-id'], 'session-two');
+assert.equal(fn({}, undefined)['x-deepseek-harness-session-id'], undefined);
+const headers = fn({'X-DeepSeek-Harness-Session-ID': 'stale', 'custom-header': 'kept'}, 'session-real');
+assert.equal(headers['x-deepseek-harness-session-id'], 'session-real');
+assert.equal(headers['X-DeepSeek-Harness-Session-ID'], undefined);
+assert.equal(headers['custom-header'], 'kept');
+assert.match(source, /requestHeaders\(profile\.headers, options\.sessionId\)/);
+console.log('PASS: per-session header, no invented ID, collision handling, custom headers, adapter call site');
