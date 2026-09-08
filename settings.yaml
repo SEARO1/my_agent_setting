@@ -3,7 +3,7 @@ ui-onboarding:
 locale:
   preference: zh
 agent-presets:
-  default: code
+  default: standard
 llm-pi-ai:
   providers:
     opencode-go:
