@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Code Review"
+  short_description: "Review agent-authored code against behavior and evidence"
+  default_prompt: "Use $agent-code-review to review these AI-authored changes against the requirements and report evidence-backed findings."

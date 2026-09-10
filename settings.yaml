@@ -3,7 +3,7 @@ ui-onboarding:
 locale:
   preference: en
 agent-presets:
-  default: code
+  default: standard
 llm-pi-ai:
   providers:
     opencode-go:
@@ -68,10 +68,11 @@ llm-pi-ai:
           name: Qwen3.6 Plus
           contextWindow: 1000000
           maxTokens: 65536
-        - id: grok-4.5
-          name: Grok 4.5
-          contextWindow: 500000
-          maxTokens: 500000
+        # Disabled for alpha: grok-4.5 is absent from the installed catalog.
+        # - id: grok-4.5
+        #   name: Grok 4.5
+        #   contextWindow: 500000
+        #   maxTokens: 500000
       apiKeyEnv: OPENCODE_GO_API_KEY
     poe:
       apiKeyEnv: POE_API_KEY
@@ -120,6 +121,7 @@ dsh-dafeiyu:
   scale: 1
   activityLevel: lively
   includeSubagents: true
+  soundEnabled: false
 vision-router:
   providers:
     - provider: opencode-go
