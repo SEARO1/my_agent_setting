@@ -1,9 +1,9 @@
 ui-onboarding:
   welcomeNoticeVersion: 2026-08-13.1
 locale:
-  preference: zh
+  preference: en
 agent-presets:
-  default: standard
+  default: ptc
 llm-pi-ai:
   providers:
     opencode-go:
@@ -101,7 +101,7 @@ llm-pi-ai:
             thinkingFormat: deepseek # DeepSeek 系 API 用 thinking:{type} + reasoning_effort
             supportsReasoningEffort: true
 agent-default-model:
-  provider: opencode-go-vision
+  provider: deepseek-official
   model: deepseek-v4-flash
   reasoningEffort: max
 ui-conversation:
@@ -152,3 +152,5 @@ llm-deepseek:
       inputModalities:
         - text
         - image
+ui-chat:
+  transcriptView: normal

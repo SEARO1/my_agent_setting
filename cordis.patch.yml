@@ -1,9 +1,11 @@
 # dsh-setup-bundle: portable profile patch for a fresh DSH install.
+# Drop into <DSH_HOME>\profiles\<profile>\cordis.patch.yml.
 # Paths use !!js process.env.USERPROFILE so they work on any Windows machine.
-# REQUIRED: put the knowledge folder at <USERPROFILE>\dsh-kb\knowledge
-# (or edit the paths below / set KB_ROOT via env).
+# Secrets come from env / ~/.dsh/.credentials.yaml — never commit real keys here.
 
 # Enable session full-text search (FTS) in the Web UI sidebar.
+# openAt: first-search defers SQLite until the first search; path is the
+# durable FTS index (must NOT be the session-persistence database).
 - id: session-query-sqlite
   config:
     path: !!js process.env.USERPROFILE + '\\.dsh\\storages\\session-fts.sqlite'
@@ -15,7 +17,7 @@
 
 # Exa web search provider (free tier) - install: dsh plugin --profile web add @deepseek-ai/dsh-web-search-exa@0.1.1-rc.2
 # (MUST pin @0.1.1-rc.2: npm 'latest' 0.0.1-rc.1 is broken - imports unpublished @deepseek-ai/dsh-environment)
-# EXA_API_KEY lives in ~/.dsh/.credentials.yaml, never commit the real key here.
+# EXA_API_KEY lives in ~/.dsh/.credentials.yaml — never commit the real key here.
 - insert:
     - id: web-search-exa
       name: '@deepseek-ai/dsh-web-search-exa'
@@ -27,3 +29,40 @@
 - id: web
   config:
     searchProvider: exa
+
+# 放宽附件图片限制（与 Vision Router bundle 同款 bytes/pixels，另加单边最大尺寸）。
+# 官方 DeepSeek Vision API 支持单边最长 8192px（15+ 张图时 4096px），DSH 默认 2000px 太保守；
+# 这里放宽到 4096，上大图不再撞「图片宽高不能超过2000px」。
+# 注意：patch 是整个替换 row config，所以必须连同 bundle 层的 bytes/pixels 一起写。
+- id: attachment-local
+  config:
+    maxImageBytes: 20971520
+    maxImagePixels: 100000000
+    maxImageDimension: 4096
+
+# --- dsh-skin managed (auto-generated; do not edit) ---
+- id: ui-skin-blue-fantasy
+  disabled: true
+- id: ui-skin-dragon-heir
+  disabled: true
+- id: ui-skin-harbor
+  disabled: true
+- id: ui-skin-matrix
+  disabled: true
+- id: ui-skin-miku
+  disabled: true
+- id: ui-skin-minecraft
+  disabled: true
+- id: ui-skin-qq98
+  disabled: true
+- id: ui-skin-ths
+  disabled: true
+- id: ui-skin-trading
+  disabled: true
+- id: ui-skin-whale-mom
+  disabled: true
+- id: ui-skin-whale-song
+  disabled: true
+- id: ui-skin-xp
+  disabled: true
+# --- end dsh-skin managed ---

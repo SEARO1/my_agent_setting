@@ -67,4 +67,19 @@
 - DSH 已 hot-reload：15 個 model-invoked skills 出現喺 catalog（tdd、code-review、grilling、research、prototype、diagnosing-bugs、codebase-design、domain-modeling、resolving-merge-conflicts、writing-for-agents、wizard、git-guardrails-claude-code、migrate-to-shoehorn、scaffold-exercises、setup-pre-commit）
 - User-invoked skills（disable-model-invocation: true，如 grill-me、handoff、ask-matt、to-spec、to-tickets、triage、wayfinder、implement、teach、wait-what 等 22 個）按設計唔會俾 model 自動調用
 - Sync 去 my_agent_setting mirror（skills/ +37 folders）
+## 2026-09-10 — Repo 同步（settings.yaml + cordis.patch.yml + skill inventory）
+
+### 同步內容（live `~/.dsh` → repo）
+- `settings.yaml`：由 live 覆蓋（repo 版停留喺 2026-09-09）。差異：`agent-presets.default: standard → ptc`、`agent-default-model: deepseek-v4.1-flash-expires-on-0910 → deepseek-v4-flash`（provider 仍 deepseek-official）、新增 `ui-chat.transcriptView: normal`
+- `cordis.patch.yml`：repo 版落後（只得 Exa 3 段）；改用 live `profiles/web/cordis.patch.yml` 內容
+  - 新增 `attachment-local` 放寬圖片限制（maxImageDimension 4096）+ 12 個 `ui-skin-*: disabled` 段 + OpenViking 註解
+  - ⚠️ live 檔硬編碼咗真 EXA key；repo 版 sanitize 做 `!!js process.env.EXA_API_KEY`，path 保持 portable（`process.env.USERPROFILE`）。查過 git history 冇 leak 過真 key
+- `skills/`：548 個檔案 hash 全部一致，只有 `web-research-fallback/SKILL.md` 唔同 → **repo 版較新**（live 版仲係「web_search 冇 key、一律用 Bing fallback」舊版本，同 AGENTS.md 規則 4 矛盾，待同步返 live）
+- `.agent-presets/code`、`repairs/*`：一致
+- live 另有 `.agent-presets/anchored-standard`（8 檔）、`liangshen`（5 檔）未 mirror；`knowledge/` 已 gitignore（規則 11）
+
+### Skill inventory（103 個）
+- `~/.dsh/skills/`：103 個 skill folder、548 個檔案；80 個 model-invocable、23 個 user-only（`disable-model-invocation: true`）
+- 來源 pack：mattpocock/skills 37、n8n 16、superpowers 系 14、Claude Code plugin 開發系 ~12、Supabase 系 5、DSH 自製 3（dsh-internals / memory-distill / web-research-fallback）、單件（diagram-design、agent-code-review、cardputer-buddy、m5-onboard 等）
+
 
