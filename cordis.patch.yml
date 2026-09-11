@@ -1,28 +1,38 @@
-# dsh-setup-bundle: portable profile patch for a fresh DSH install.
-# Drop into <DSH_HOME>\profiles\<profile>\cordis.patch.yml.
-# Paths use !!js process.env.USERPROFILE so they work on any Windows machine.
-# Secrets come from env / ~/.dsh/.credentials.yaml — never commit real keys here.
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
 
 # Enable session full-text search (FTS) in the Web UI sidebar.
 # openAt: first-search defers SQLite until the first search; path is the
 # durable FTS index (must NOT be the session-persistence database).
 - id: session-query-sqlite
   config:
-    path: !!js process.env.USERPROFILE + '\\.dsh\\storages\\session-fts.sqlite'
+    path: 'C:\Users\cheun\.dsh\storages\session-fts.sqlite'
     openAt: first-search
 
 # Knowledge base MCP server: REMOVED - MIGRATED to OpenViking (2026-08-22).
-# Old KB + mcp-server kept in place (not deleted). Use mcp__openviking__* tools + openviking-memory skill.
-# OpenViking server: ~/.openviking/start-ov.bat (port 1933), plugin @openviking/dsh-memory-plugin.
+# Old KB files + mcp-server kept in place (not deleted). Use mcp__openviking__* tools instead.
 
-# Exa web search provider (free tier) - install: dsh plugin --profile web add @deepseek-ai/dsh-web-search-exa@0.1.1-rc.2
-# (MUST pin @0.1.1-rc.2: npm 'latest' 0.0.1-rc.1 is broken - imports unpublished @deepseek-ai/dsh-environment)
-# EXA_API_KEY lives in ~/.dsh/.credentials.yaml — never commit the real key here.
+# Cross-session awareness MCP server (2026-09-12): a DSH session can see what the other
+# sessions on this machine are doing (peers / session_detail / announce / board / whoami).
+# Source: C:\Users\cheun\OneDrive\Desktop\agent_cross-session_mcp (reads session logs read-only).
+# serverName must stay 'crosssession' - caller identification matches mcp__crosssession__* records.
+- insert:
+    - id: mcp-cross-session
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: crosssession
+        transport: stdio
+        command: node
+        args: ['C:\Users\cheun\OneDrive\Desktop\agent_cross-session_mcp\server.mjs']
+        cwd: 'C:\Users\cheun\OneDrive\Desktop\agent_cross-session_mcp'
+
+# Exa web search provider (free tier) - 2026-08-22. Key lives in ~/.dsh/.credentials.yaml (EXA_API_KEY), not in this file.
 - insert:
     - id: web-search-exa
       name: '@deepseek-ai/dsh-web-search-exa'
       config:
-        apiKey: !!js process.env.EXA_API_KEY
+        apiKey: 89593775-74fc-46e5-baab-c46b87178c07
         searchType: auto
 
 # Pin Exa as the active search provider (deepseek + exa both registered - must pick one or WEB_PROVIDER_AMBIGUOUS).
