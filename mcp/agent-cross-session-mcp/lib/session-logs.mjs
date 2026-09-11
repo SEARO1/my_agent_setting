@@ -199,6 +199,7 @@ export function summarizeSession(records, meta = {}) {
     lastAssistantText: null,
     lastAssistantAt: null,
     pendingTool: null,
+    pendingNestedTool: null,
     pendingSince: null,
     lastTool: null,
     frameCount: meta.frameCount ?? 0,
@@ -208,6 +209,8 @@ export function summarizeSession(records, meta = {}) {
   const resolvedCalls = new Set();
   let lastCall = null;
   let lastCallAt = null;
+  let dispatchId = null;
+  let dispatchName = null;
   for (const record of records) {
     const { type, data, time } = record;
     if (typeof time === 'number') summary.lastEventAt = time;
@@ -234,6 +237,14 @@ export function summarizeSession(records, meta = {}) {
       lastCall = { callId: data?.callId ?? null, name: data?.name ?? 'unknown' };
       lastCallAt = time ?? null;
       summary.lastTool = lastCall.name;
+    } else if (type === 'tool/code-dispatch-start') {
+      dispatchId = data?.subCallId ?? null;
+      dispatchName = data?.name ?? null;
+    } else if (type === 'tool/code-dispatch') {
+      if (data?.subCallId !== undefined && data.subCallId === dispatchId) {
+        dispatchId = null;
+        dispatchName = null;
+      }
     } else if (type === 'tool/result') {
       const callId = data?.message?.source?.callId ?? null;
       if (callId !== null) resolvedCalls.add(callId);
@@ -241,6 +252,7 @@ export function summarizeSession(records, meta = {}) {
   }
   if (lastCall !== null && lastCall.callId !== null && !resolvedCalls.has(lastCall.callId)) {
     summary.pendingTool = lastCall.name;
+    summary.pendingNestedTool = dispatchName;
     summary.pendingSince = lastCallAt;
   }
   return summary;
@@ -287,9 +299,9 @@ export function buildTimeline(records, limit = 30) {
 /**
  * Name the session that is calling one of our own MCP tools right now.
  *
- * DSH does not forward a session identity to MCP servers, but it appends every
- * `tool/call` to the caller's log *before* the call is served, so a matching
- * record identifies the caller exactly.
+ * DSH does not forward a session identity to MCP servers, but it appends the caller's
+ * `tool/call` (or `tool/code-dispatch-start` for a call made inside `run_code`) to its log
+ * *before* the call is served, so a matching record identifies the caller exactly.
  *
  * @param publicNames - fully qualified tool names, e.g. `mcp__crosssession__peers`.
  * @param options - search window and retry policy.
@@ -324,9 +336,8 @@ function findNewestMatchingCall(publicNames, root, withinMs) {
     }
     const header = read.records.find((record) => record.type === 'session');
     for (const record of read.records) {
-      if (record.type !== 'tool/call') continue;
-      const name = record.data?.name ?? '';
-      if (!publicNames.includes(name)) continue;
+      const name = recordToolName(record);
+      if (name === null || !publicNames.includes(name)) continue;
       const at = typeof record.time === 'number' ? record.time : log.mtimeMs;
       if (at < cutoff) continue;
       if (best === null || at > best.at) {
@@ -335,6 +346,21 @@ function findNewestMatchingCall(publicNames, root, withinMs) {
     }
   }
   return best;
+}
+
+/**
+ * The tool name of a direct or programmatic call record.
+ *
+ * A tool the model calls itself is written as `tool/call`; the same tool called from
+ * inside `run_code` is written as `tool/code-dispatch-start`. Both identify the
+ * calling session.
+ *
+ * @param record - one session-log record.
+ * @returns the tool name, or `null` for every other record type.
+ */
+function recordToolName(record) {
+  if (record.type === 'tool/call' || record.type === 'tool/code-dispatch-start') return record.data?.name ?? null;
+  return null;
 }
 
 /** Concatenate the text parts of one message content array. */

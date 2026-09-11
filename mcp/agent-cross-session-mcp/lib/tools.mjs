@@ -285,7 +285,10 @@ function renderPeers(rows, { total, activeWithinMinutes, caller }) {
  */
 function describeStatus(summary) {
   const age = formatAge(summary.lastEventAt ?? summary.mtimeMs);
-  if (summary.pendingTool !== null) return `busy — running ${summary.pendingTool} (last event ${age} ago)`;
+  if (summary.pendingTool !== null) {
+    const nested = summary.pendingNestedTool === null || summary.pendingNestedTool === undefined ? '' : ` → ${summary.pendingNestedTool}`;
+    return `busy — running ${summary.pendingTool}${nested} (last event ${age} ago)`;
+  }
   return `idle (last event ${age} ago)`;
 }
 

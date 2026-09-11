@@ -57,8 +57,9 @@ torn final frame and is skipped until the next poll.
 
 **The calling session is recovered, not assumed.** DSH does not forward a session identity to
 MCP servers — a `tools/call` request carries only the tool name and arguments. But DSH appends the
-caller's `tool/call` record to its log *before* the call is served, so
-`identifyCaller()` finds the matching record in the logs written in the last two minutes and
+caller's own record to its log *before* the call is served: `tool/call` for a tool the model calls
+directly, `tool/code-dispatch-start` for the same tool called from inside `run_code`. So
+`identifyCaller()` reads the logs written in the last two minutes, matches either record, and
 reports that session as `← this session`. When identification fails, `announce` still stores the
 note and says it was anonymous.
 

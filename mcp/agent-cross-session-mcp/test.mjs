@@ -74,42 +74,46 @@ const fakeRecords = [
   { type: 'tool/call', seq: 5, time: now - 55000, data: { turn: 1, step: 1, callId: 'call-1', name: 'mcp__crosssession__peers', arguments: '{}' } },
   { type: 'tool/result', seq: 6, time: now - 54000, data: { turn: 1, step: 1, message: { source: { kind: 'tool', callId: 'call-1' }, content: [] } } },
   { type: 'tool/call', seq: 7, time: now - 53000, data: { turn: 1, step: 2, callId: 'call-2', name: 'run_code', arguments: '{"description":"do work"}' } },
+  { type: 'tool/code-dispatch-start', seq: 8, time: now - 52000, data: { rootCallId: 'call-2', parentCallId: 'call-2', subCallId: 'call-2:code:1', name: 'pwsh', arguments: { command: 'ls' } } },
+  { type: 'tool/code-dispatch', seq: 9, time: now - 51000, data: { subCallId: 'call-2:code:1', name: 'pwsh', isError: false, content: [] } },
+  { type: 'tool/code-dispatch-start', seq: 10, time: now - 50000, data: { rootCallId: 'call-2', parentCallId: 'call-2', subCallId: 'call-2:code:2', name: 'mcp__crosssession__whoami', arguments: {} } },
 ];
 const fakeFile = writeSyntheticSession(fakeRoot, 'session-aaaaaaaa-1111-2222-3333-444444444444', fakeRecords);
 
 await test('frame scanner finds every synthetic frame', () => {
   const buffer = fs.readFileSync(fakeFile);
   const scan = scanZstdFrames(buffer);
-  assert.equal(scan.frames.length, 4);
+  assert.equal(scan.frames.length, 6);
   assert.equal(scan.tornStart, undefined);
   assert.equal(scan.frames[0].start, 0);
-  assert.equal(scan.frames[3].end, buffer.length);
+  assert.equal(scan.frames[5].end, buffer.length);
 });
 
 await test('frame scanner reports a torn final frame instead of throwing', () => {
   const buffer = fs.readFileSync(fakeFile);
   const truncated = buffer.subarray(0, buffer.length - 3);
   const scan = scanZstdFrames(truncated);
-  assert.equal(scan.frames.length, 3);
+  assert.equal(scan.frames.length, 5);
   assert.equal(typeof scan.tornStart, 'number');
 });
 
 await test('windowed read decodes head and tail records', () => {
   const read = readSessionRecords(fakeFile, { headFrames: 1, tailFrames: 2 });
-  assert.equal(read.frameCount, 4);
+  assert.equal(read.frameCount, 6);
   assert.equal(read.windowed, true);
   assert.equal(read.records[0].type, 'session');
-  assert.ok(read.records.some((record) => record.type === 'tool/call'));
+  assert.ok(read.records.some((record) => record.type.startsWith('tool/')));
 });
 
 await test('summary keeps the human message and flags the running tool', () => {
-  const read = readSessionRecords(fakeFile, { headFrames: 1, tailFrames: 4 });
+  const read = readSessionRecords(fakeFile, { headFrames: 1, tailFrames: 6 });
   const summary = summarizeSession(read.records, { ...read, sessionId: 'session-aaaaaaaa-1111-2222-3333-444444444444' });
   assert.equal(summary.cwd, 'C:\\fake\\workspace');
   assert.equal(summary.title, 'fake session');
   assert.equal(summary.lastUserText, 'please refactor the parser');
   assert.equal(summary.lastAssistantText, 'on it');
   assert.equal(summary.pendingTool, 'run_code');
+  assert.equal(summary.pendingNestedTool, 'mcp__crosssession__whoami');
 });
 
 await test('caller identification matches an in-flight tool call', async () => {
@@ -117,6 +121,12 @@ await test('caller identification matches an in-flight tool call', async () => {
   assert.ok(caller, 'expected the synthetic call to identify its session');
   assert.equal(caller.sessionId, 'session-aaaaaaaa-1111-2222-3333-444444444444');
   assert.equal(caller.cwd, 'C:\\fake\\workspace');
+});
+
+await test('caller identification matches a call made inside run_code', async () => {
+  const caller = await identifyCaller(['mcp__crosssession__whoami'], { root: fakeRoot, attempts: 1 });
+  assert.ok(caller, 'expected the nested dispatch record to identify its session');
+  assert.equal(caller.sessionId, 'session-aaaaaaaa-1111-2222-3333-444444444444');
 });
 
 await test('caller identification ignores other servers', async () => {
