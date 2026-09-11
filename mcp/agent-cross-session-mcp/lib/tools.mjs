@@ -19,6 +19,7 @@
  */
 import {
   buildTimeline,
+  collectActivity,
   formatAge,
   identifyCaller,
   listSessionLogs,
@@ -37,8 +38,8 @@ const SERVER_NAME = process.env.CROSS_SESSION_SERVER_NAME ?? 'crosssession';
 const SERVER_VERSION = '0.1.0';
 /** Window sizes for cheap reads: one head frame carries the session header. */
 const HEAD_FRAMES = 1;
-/** Tail frames decoded for a peers summary — roughly the current turn. */
-const SUMMARY_TAIL_FRAMES = 6;
+/** Tail frames decoded for a peers summary — roughly the last few turns. */
+const SUMMARY_TAIL_FRAMES = 30;
 
 
 /** Tool definitions published to the model. */
@@ -85,6 +86,19 @@ const TOOLS = [
         },
       },
       required: ['session_id'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'overlaps',
+    description:
+      'Report collision risk between DSH sessions: files touched by more than one session, sessions sharing one workspace, and git commands run in the same repo. Use it before editing a repo another session is working in, or when the user asks whether two sessions will clash.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        active_within_minutes: { type: 'number', description: 'How far back to look for activity (default 240).' },
+        limit: { type: 'number', description: 'Maximum sessions to consider (default 12).' },
+      },
       additionalProperties: false,
     },
   },
@@ -141,9 +155,13 @@ async function handlePeers(args) {
   let selected = logs.filter((log) => includeDormant || log.mtimeMs >= cutoff);
   if (workspace) selected = selected.filter((log) => log.file.toLowerCase().includes(workspace));
   const caller = await identifyCaller(PUBLIC_NAMES, { attempts: 3, delayMs: 150 });
-  const rows = selected
-    .slice(0, limit)
-    .map((log) => peekSession(log, { headFrames: HEAD_FRAMES, tailFrames: SUMMARY_TAIL_FRAMES }).summary);
+  const rows = selected.slice(0, limit).map((log) => {
+    const peeked = peekSession(log, { headFrames: HEAD_FRAMES, tailFrames: SUMMARY_TAIL_FRAMES });
+    return {
+      summary: peeked.summary,
+      activity: collectActivity(peeked.records, { cwd: peeked.summary.cwd, sinceMs: cutoff }),
+    };
+  });
   if (rows.length === 0) {
     return `No DSH session has been active in the last ${activeWithinMinutes} minutes (${logs.length} on disk). Pass include_dormant to list them anyway.`;
   }
@@ -260,11 +278,11 @@ function renderSessionHead(summary, heading = null) {
  * @returns rendered report.
  */
 function renderPeers(rows, { total, activeWithinMinutes, caller }) {
-  const busy = rows.filter((row) => row.pendingTool !== null).length;
+  const busy = rows.filter((row) => row.summary.pendingTool !== null).length;
   const lines = [
     `DSH sessions — ${rows.length} shown of ${total} on disk · ${busy} running a tool · active within ${activeWithinMinutes}m · now ${formatStamp(Date.now())}`,
   ];
-  rows.forEach((summary, index) => {
+  rows.forEach(({ summary, activity }, index) => {
     const mine = caller !== null && caller.sessionId === summary.sessionId ? '   ← this session' : '';
     lines.push('');
     lines.push(`${index + 1}) ${shortId(summary.sessionId)}${mine}`);
@@ -274,6 +292,8 @@ function renderPeers(rows, { total, activeWithinMinutes, caller }) {
     if (summary.lastUserText) lines.push(`   asked     : ${truncate(oneLine(summary.lastUserText), 160)}`);
     if (summary.lastAssistantText) lines.push(`   said      : ${truncate(oneLine(summary.lastAssistantText), 160)}`);
     else if (summary.pendingTool !== null) lines.push('   said      : (turn in progress)');
+    const touched = renderActivityLine(activity);
+    if (touched !== '') lines.push(`   touched   : ${touched}`);
   });
   return lines.join('\n');
 }
@@ -284,12 +304,17 @@ function renderPeers(rows, { total, activeWithinMinutes, caller }) {
  * @returns one status phrase.
  */
 function describeStatus(summary) {
-  const age = formatAge(summary.lastEventAt ?? summary.mtimeMs);
+  const workAt = summary.lastWorkAt ?? summary.lastEventAt ?? summary.mtimeMs;
+  const age = formatAge(workAt);
   if (summary.pendingTool !== null) {
     const nested = summary.pendingNestedTool === null || summary.pendingNestedTool === undefined ? '' : ` → ${summary.pendingNestedTool}`;
     return `busy — running ${summary.pendingTool}${nested} (last event ${age} ago)`;
   }
-  return `idle (last event ${age} ago)`;
+  const seeded =
+    typeof summary.lastEventAt === 'number' && typeof summary.lastWorkAt === 'number' && summary.lastEventAt - summary.lastWorkAt > 600000
+      ? ` · log written ${formatAge(summary.lastEventAt)} ago (seed/resume)`
+      : '';
+  return `idle (last work ${age} ago${seeded})`;
 }
 
 /**
@@ -303,6 +328,92 @@ function renderBoard(entries) {
   for (const entry of entries) {
     lines.push(`${formatStamp(entry.at)}  ${entry.sessionId ? shortId(entry.sessionId) : 'anonymous'}  ${truncate(oneLine(entry.text), 200)}`);
   }
+  return lines.join('\n');
+}
+
+/**
+ * One compact `touched` line for the peers list.
+ * @param activity - collected activity, or undefined when none was gathered.
+ * @returns the line body, or an empty string when nothing recent was touched.
+ */
+function renderActivityLine(activity) {
+  if (activity === undefined || activity.files.length === 0) return '';
+  const shown = activity.files.slice(0, 3).map((file) => {
+    const name = file.path.split(/[\\/]/).pop() ?? file.path;
+    return file.writes > 0 ? `${name} (w)` : name;
+  });
+  const verbs = [...new Set(activity.git.map((entry) => entry.verb))];
+  return verbs.length > 0 ? `${shown.join(', ')}  · git: ${verbs.join(', ')}` : shown.join(', ');
+}
+
+/**
+ * Report where two sessions could collide.
+ * @param args - tool arguments.
+ * @returns rendered overlap report.
+ */
+async function handleOverlaps(args) {
+  const activeWithinMinutes = numberArg(args.active_within_minutes, 240);
+  const limit = Math.max(2, Math.round(numberArg(args.limit, 12)));
+  const sinceMs = Date.now() - activeWithinMinutes * 60_000;
+  const logs = listSessionLogs().filter((log) => log.mtimeMs >= sinceMs).slice(0, limit);
+  if (logs.length < 2) {
+    return `Only ${logs.length} session had log activity in the last ${activeWithinMinutes} minutes — nothing can collide. Raise active_within_minutes to widen the window.`;
+  }
+  const rows = logs.map((log) => {
+    const peeked = peekSession(log, { headFrames: HEAD_FRAMES, tailFrames: SUMMARY_TAIL_FRAMES });
+    return { summary: peeked.summary, activity: collectActivity(peeked.records, { cwd: peeked.summary.cwd, sinceMs }) };
+  });
+  return renderOverlaps(rows, { activeWithinMinutes });
+}
+
+/**
+ * Render the overlap report: shared workspaces, git races, shared files.
+ * @param rows - one entry per session with its collected activity.
+ * @param meta - the look-back window.
+ * @returns rendered report.
+ */
+function renderOverlaps(rows, { activeWithinMinutes }) {
+  const lines = [`Cross-session overlap — ${rows.length} sessions with log activity in the last ${activeWithinMinutes}m (now ${formatStamp(Date.now())})`];
+  const byWorkspace = new Map();
+  for (const row of rows) {
+    const key = (row.summary.cwd ?? '(unknown)').toLowerCase();
+    byWorkspace.set(key, [...(byWorkspace.get(key) ?? []), row]);
+  }
+  for (const group of byWorkspace.values()) {
+    if (group.length < 2) continue;
+    lines.push('', `⚠ same workspace: ${group[0].summary.cwd ?? '(unknown)'}`);
+    for (const row of group) {
+      const writes = row.activity.files.filter((file) => file.writes > 0).length;
+      const reads = row.activity.files.filter((file) => file.reads > 0 && file.writes === 0).length;
+      const verbs = [...new Set(row.activity.git.map((entry) => entry.verb))];
+      lines.push(`   ${shortId(row.summary.sessionId)}  ${truncate(oneLine(row.summary.title ?? '') || '(no title)', 46)}`);
+      lines.push(`       ${describeStatus(row.summary)}`);
+      lines.push(`       files: ${writes} written / ${reads} read${verbs.length > 0 ? `  · git: ${verbs.join(', ')}` : ''}`);
+    }
+    const gitSessions = group.filter((row) => row.activity.git.length > 0).length;
+    if (gitSessions > 1) lines.push(`   ⚠ ${gitSessions} sessions ran git here — one add -A / checkout can sweep the other's work`);
+  }
+  const byFile = new Map();
+  for (const row of rows) {
+    for (const file of row.activity.files) {
+      byFile.set(file.key, [...(byFile.get(file.key) ?? []), { row, file }]);
+    }
+  }
+  const shared = [...byFile.values()].filter((group) => group.length > 1);
+  if (shared.length === 0) {
+    lines.push('', 'No file was touched by more than one session in this window.');
+  } else {
+    lines.push('', `⚠ files touched by more than one session (${shared.length}):`);
+    for (const group of shared.slice(0, 12)) {
+      const writers = group.filter((entry) => entry.file.writes > 0).length;
+      lines.push(`   ${writers > 1 ? '⚠ CONFLICT' : '·'} ${truncate(group[0].file.path, 110)}`);
+      for (const entry of group) {
+        const action = entry.file.writes > 0 ? `wrote x${entry.file.writes}` : `read x${entry.file.reads}`;
+        lines.push(`       ${shortId(entry.row.summary.sessionId)}  ${action}  ${formatAge(entry.file.lastAt)} ago`);
+      }
+    }
+  }
+  lines.push('', 'Fix: give one session its own git worktree (see the using-git-worktrees skill), or announce which files each session owns.');
   return lines.join('\n');
 }
 
@@ -346,6 +457,7 @@ function numberArg(value, fallback) {
 /** Raw tool name to handler. */
 const HANDLERS = {
   peers: handlePeers,
+  overlaps: handleOverlaps,
   session_detail: handleSessionDetail,
   announce: handleAnnounce,
   board: handleBoard,

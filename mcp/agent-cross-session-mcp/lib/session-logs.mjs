@@ -194,6 +194,7 @@ export function summarizeSession(records, meta = {}) {
     agentPreset: null,
     createdAt: null,
     lastEventAt: meta.mtimeMs ?? null,
+    lastWorkAt: null,
     lastUserText: null,
     lastUserAt: null,
     lastAssistantText: null,
@@ -213,7 +214,10 @@ export function summarizeSession(records, meta = {}) {
   let dispatchName = null;
   for (const record of records) {
     const { type, data, time } = record;
-    if (typeof time === 'number') summary.lastEventAt = time;
+    if (typeof time === 'number') {
+      summary.lastEventAt = time;
+      if (isWorkRecord(type, data)) summary.lastWorkAt = time;
+    }
     if (type === 'session') {
       summary.sessionId = record.id ?? summary.sessionId;
       summary.cwd = record.cwd ?? null;
@@ -256,6 +260,22 @@ export function summarizeSession(records, meta = {}) {
     summary.pendingSince = lastCallAt;
   }
   return summary;
+}
+
+/**
+ * Whether a record means the session or its human actually did something.
+ *
+ * Session files are also written when DSH seeds or resumes a session, so the
+ * file mtime alone would make a dormant session look active.
+ *
+ * @param type - record type.
+ * @param data - record payload.
+ * @returns @@BT@@true@@BT@@ for human messages, replies, and tool calls.
+ */
+function isWorkRecord(type, data) {
+  if (type === 'assistant/message' || type === 'tool/call' || type === 'tool/code-dispatch-start') return true;
+  if (type === 'user/message') return data?.source?.kind === HUMAN_SOURCE_KIND;
+  return false;
 }
 
 /**
@@ -349,6 +369,98 @@ function findNewestMatchingCall(publicNames, root, withinMs) {
 }
 
 /**
+ * Extract the tool call one record describes.
+ *
+ * A tool the model calls itself is a `tool/call` record whose `arguments` are a JSON
+ * string; the same tool called from inside `run_code` is a
+ * `tool/code-dispatch-start` record whose `arguments` are already an object.
+ *
+ * @param record - one session-log record.
+ * @returns the call, or `null` for every other record type.
+ */
+export function toolCallOf(record) {
+  if (record.type !== 'tool/call' && record.type !== 'tool/code-dispatch-start') return null;
+  const raw = record.data?.arguments;
+  let args = null;
+  if (typeof raw === 'string') {
+    try {
+      args = JSON.parse(raw);
+    } catch {
+      args = null;
+    }
+  } else if (raw !== null && typeof raw === 'object') {
+    args = raw;
+  }
+  return { name: record.data?.name ?? null, args, at: typeof record.time === 'number' ? record.time : null };
+}
+
+/** Tools whose call means the session is writing that file. */
+const WRITING_TOOLS = new Set(['write', 'edit', 'str_replace_editor', 'write_file', 'apply_patch']);
+
+/**
+ * Collect the file and git activity inside one session window.
+ *
+ * Paths are resolved against the session workspace, so a relative
+ * `lib/tools.mjs` and an absolute path to the same file collapse into one key.
+ *
+ * @param records - decoded records, oldest first.
+ * @param options - `cwd` resolves relative paths; `sinceMs` drops older calls.
+ * @returns touched files (newest first) and the git subcommands this session ran.
+ */
+export function collectActivity(records, { cwd = null, sinceMs = null } = {}) {
+  const files = new Map();
+  const git = [];
+  for (const record of records) {
+    const call = toolCallOf(record);
+    if (call === null) continue;
+    if (sinceMs !== null && (call.at ?? 0) < sinceMs) continue;
+    const args = call.args ?? {};
+    const target = typeof args.file_path === 'string' ? args.file_path : typeof args.path === 'string' ? args.path : null;
+    if (target !== null && call.name !== null) {
+      const resolved = path.resolve(cwd ?? process.cwd(), target);
+      const key = resolved.toLowerCase();
+      const entry = files.get(key) ?? { key, path: resolved, reads: 0, writes: 0, lastAt: null, tools: new Set() };
+      if (WRITING_TOOLS.has(call.name)) entry.writes += 1;
+      else entry.reads += 1;
+      if (call.at !== null && (entry.lastAt === null || call.at > entry.lastAt)) entry.lastAt = call.at;
+      entry.tools.add(call.name);
+      files.set(key, entry);
+    }
+    const command = typeof args.command === 'string' ? args.command : null;
+    const verb = command === null ? null : gitVerb(command);
+    if (verb !== null) git.push({ verb, command: oneLine(command).slice(0, 140), at: call.at });
+  }
+  return {
+    files: [...files.values()]
+      .map((entry) => ({ ...entry, tools: [...entry.tools] }))
+      .sort((a, b) => (b.lastAt ?? 0) - (a.lastAt ?? 0)),
+    git,
+  };
+}
+
+/**
+ * Read the git subcommand out of one shell command line.
+ * @param command - the raw command text.
+ * @returns the subcommand, or `null` when the command never calls git.
+ */
+function gitVerb(command) {
+  const tokens = oneLine(command).split(' ');
+  const start = tokens.findIndex((token) => token === 'git' || /(^|[\\/])git(\.exe)?$/.test(token));
+  if (start < 0) return null;
+  for (let index = start + 1; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (token === '') continue;
+    if (token === '-C' || token === '-c' || token === '--git-dir') {
+      index += 1;
+      continue;
+    }
+    if (token.startsWith('-')) continue;
+    return token.replace(/["']/g, '').toLowerCase();
+  }
+  return null;
+}
+
+/**
  * The tool name of a direct or programmatic call record.
  *
  * A tool the model calls itself is written as `tool/call`; the same tool called from
@@ -359,8 +471,7 @@ function findNewestMatchingCall(publicNames, root, withinMs) {
  * @returns the tool name, or `null` for every other record type.
  */
 function recordToolName(record) {
-  if (record.type === 'tool/call' || record.type === 'tool/code-dispatch-start') return record.data?.name ?? null;
-  return null;
+  return toolCallOf(record)?.name ?? null;
 }
 
 /** Concatenate the text parts of one message content array. */

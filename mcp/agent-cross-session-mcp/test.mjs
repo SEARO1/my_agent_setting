@@ -21,7 +21,7 @@ process.env.CROSS_SESSION_BOARD = path.join(SCRATCH, 'board', 'board.jsonl');
 const sessionLogs = await import('./lib/session-logs.mjs');
 const board = await import('./lib/board.mjs');
 const tools = await import('./lib/tools.mjs');
-const { SESSION_LOG_FILENAME, identifyCaller, listSessionLogs, readSessionRecords, scanZstdFrames, summarizeSession, sessionsRoot } = sessionLogs;
+const { SESSION_LOG_FILENAME, collectActivity, identifyCaller, listSessionLogs, readSessionRecords, scanZstdFrames, summarizeSession, sessionsRoot } = sessionLogs;
 const { callTool, TOOLS } = tools;
 
 let passed = 0;
@@ -76,30 +76,33 @@ const fakeRecords = [
   { type: 'tool/call', seq: 7, time: now - 53000, data: { turn: 1, step: 2, callId: 'call-2', name: 'run_code', arguments: '{"description":"do work"}' } },
   { type: 'tool/code-dispatch-start', seq: 8, time: now - 52000, data: { rootCallId: 'call-2', parentCallId: 'call-2', subCallId: 'call-2:code:1', name: 'pwsh', arguments: { command: 'ls' } } },
   { type: 'tool/code-dispatch', seq: 9, time: now - 51000, data: { subCallId: 'call-2:code:1', name: 'pwsh', isError: false, content: [] } },
-  { type: 'tool/code-dispatch-start', seq: 10, time: now - 50000, data: { rootCallId: 'call-2', parentCallId: 'call-2', subCallId: 'call-2:code:2', name: 'mcp__crosssession__whoami', arguments: {} } },
+  { type: 'tool/code-dispatch-start', seq: 10, time: now - 50000, data: { rootCallId: 'call-2', parentCallId: 'call-2', subCallId: 'call-2:code:2', name: 'write', arguments: { file_path: 'src/app.ts', content: 'x' } } },
+  { type: 'tool/code-dispatch-start', seq: 11, time: now - 49000, data: { rootCallId: 'call-2', parentCallId: 'call-2', subCallId: 'call-2:code:3', name: 'pwsh', arguments: { command: 'git -C repo commit -m "x"' } } },
+  { type: 'tool/code-dispatch-start', seq: 12, time: now - 48000, data: { rootCallId: 'call-2', parentCallId: 'call-2', subCallId: 'call-2:code:4', name: 'mcp__crosssession__whoami', arguments: {} } },
 ];
+const FRAME_COUNT = Math.ceil(fakeRecords.length / 2);
 const fakeFile = writeSyntheticSession(fakeRoot, 'session-aaaaaaaa-1111-2222-3333-444444444444', fakeRecords);
 
 await test('frame scanner finds every synthetic frame', () => {
   const buffer = fs.readFileSync(fakeFile);
   const scan = scanZstdFrames(buffer);
-  assert.equal(scan.frames.length, 6);
+  assert.equal(scan.frames.length, FRAME_COUNT);
   assert.equal(scan.tornStart, undefined);
   assert.equal(scan.frames[0].start, 0);
-  assert.equal(scan.frames[5].end, buffer.length);
+  assert.equal(scan.frames[FRAME_COUNT - 1].end, buffer.length);
 });
 
 await test('frame scanner reports a torn final frame instead of throwing', () => {
   const buffer = fs.readFileSync(fakeFile);
   const truncated = buffer.subarray(0, buffer.length - 3);
   const scan = scanZstdFrames(truncated);
-  assert.equal(scan.frames.length, 5);
+  assert.equal(scan.frames.length, FRAME_COUNT - 1);
   assert.equal(typeof scan.tornStart, 'number');
 });
 
 await test('windowed read decodes head and tail records', () => {
   const read = readSessionRecords(fakeFile, { headFrames: 1, tailFrames: 2 });
-  assert.equal(read.frameCount, 6);
+  assert.equal(read.frameCount, FRAME_COUNT);
   assert.equal(read.windowed, true);
   assert.equal(read.records[0].type, 'session');
   assert.ok(read.records.some((record) => record.type.startsWith('tool/')));
@@ -114,6 +117,20 @@ await test('summary keeps the human message and flags the running tool', () => {
   assert.equal(summary.lastAssistantText, 'on it');
   assert.equal(summary.pendingTool, 'run_code');
   assert.equal(summary.pendingNestedTool, 'mcp__crosssession__whoami');
+});
+
+await test('activity extraction finds written files and git commands', () => {
+  const read = readSessionRecords(fakeFile, { headFrames: 1, tailFrames: 10 });
+  const activity = collectActivity(read.records, { cwd: 'C:\\fake\\workspace' });
+  const written = activity.files.find((file) => file.writes > 0);
+  assert.ok(written, 'expected a written file');
+  assert.equal(written.path, 'C:\\fake\\workspace\\src\\app.ts');
+  assert.deepEqual(activity.git.map((entry) => entry.verb), ['commit']);
+});
+
+await test('overlaps reports without throwing', async () => {
+  const text = await callTool('overlaps', { active_within_minutes: 100000, limit: 5 });
+  assert.ok(/Cross-session overlap|nothing can collide/.test(text));
 });
 
 await test('caller identification matches an in-flight tool call', async () => {

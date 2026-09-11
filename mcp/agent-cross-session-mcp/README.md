@@ -24,6 +24,7 @@ This server closes that gap with two read paths and one write path:
 |---|---|
 | `peers` | Who else is running, in which workspace, doing what — tool in flight, last human request, last reply. |
 | `session_detail` | The recent timeline of one session: human messages, agent replies, tool calls in order. |
+| `overlaps` | Which files two sessions both touched, which share a workspace, and which ran git in the same repo. |
 | `announce` | Post a note for the other sessions (what you own, what you decided). |
 | `board` | Read the notes other sessions posted, newest first. |
 | `whoami` | Which session am I, which workspace, what am I doing. |
@@ -65,6 +66,24 @@ note and says it was anonymous.
 
 **Nothing here needs DSH to change.** The server is a plain stdio MCP process; DSH mounts it
 through `dsh-mcp-client` like any other MCP server.
+
+## Collision prevention
+
+Two sessions in one repo is the case this server exists for, so the peer view carries the
+evidence a collision would leave:
+
+- @@BT@@peers@@BT@@ adds a @@BT@@touched@@BT@@ line per session: the newest files that session read or wrote
+  (@@BT@@(w)@@BT@@ marks a write) plus the git subcommands it ran.
+- @@BT@@overlaps@@BT@@ compares every recently active session and reports, in one report: sessions sharing
+  a workspace, how many files each wrote, git races (@@BT@@add -A@@BT@@, @@BT@@commit@@BT@@, @@BT@@checkout@@BT@@ in the same repo), and
+  each file more than one session touched — @@BT@@⚠ CONFLICT@@BT@@ when both wrote it.
+- Status lines separate real work from log writes: a session that was only seeded or resumed
+  reads @@BT@@idle (last work 1d2h ago · log written 27m ago (seed/resume))@@BT@@ instead of looking active.
+
+This is **advisory**: nothing here blocks a write, and nothing appears unless an agent asks.
+For hard isolation give each session its own @@BT@@git worktree@@BT@@ (see the @@BT@@using-git-worktrees@@BT@@ skill) —
+the radar then covers what worktrees cannot: the same working tree reopened twice, files
+outside any repo, and the git commands themselves.
 
 ## Register it in DSH
 
