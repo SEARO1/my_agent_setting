@@ -85,6 +85,19 @@ For hard isolation give each session its own @@BT@@git worktree@@BT@@ (see the @
 the radar then covers what worktrees cannot: the same working tree reopened twice, files
 outside any repo, and the git commands themselves.
 
+## Install
+
+```powershell
+npm install --cache .\.npm-cache           # sandboxed npm needs its cache inside the project
+pwsh -File scripts/install-to-dsh.ps1 -Commit
+```
+
+The script copies `skills/cross-session` into `<DSH_HOME>/skills`, inserts the
+`install/cordis-block.yml` row into `<DSH_HOME>/profiles/<profile>/cordis.patch.yml` once
+(leaving a `.bak` beside it), and refreshes the `my_agent_setting` mirror. It derives every
+path from the repository location, so a fresh clone on another machine works unchanged; override the
+targets with `DSH_HOME` / `CROSS_SESSION_MIRROR` and the profile with `-Profile`.
+
 ## Register it in DSH
 
 Add one row to `~/.dsh/profiles/<profile>/cordis.patch.yml`:
@@ -122,12 +135,15 @@ Notes:
 ## Layout
 
 ```
-server.mjs              stdio transport only (MCP SDK wiring)
-lib/tools.mjs           tool definitions, handlers, rendering
-lib/session-logs.mjs    zstd frame scanner, windowed reader, activity summarizer, caller lookup
-lib/board.mjs           append-only announcement log with size-capped compaction
-test.mjs                tests: frame scanner, summarizer, caller lookup, every tool, stdio round trip
-spike/                  throwaway probes used to reverse-engineer the session-log format
+server.mjs                    stdio transport only (MCP SDK wiring)
+lib/tools.mjs                 tool definitions, handlers, rendering
+lib/session-logs.mjs          zstd frame scanner, windowed reader, summarizer, activity, caller lookup
+lib/board.mjs                 append-only announcement log with size-capped compaction
+skills/cross-session/SKILL.md the DSH skill that tells an agent when to reach for these tools
+install/cordis-block.yml      the MCP row, with __ROOT__/__SERVER__ placeholders
+scripts/install-to-dsh.ps1    installs the skill + row into the live DSH home and mirrors my_agent_setting
+test.mjs                      tests: frame scanner, summarizer, activity, caller lookup, every tool, stdio
+spike/                        throwaway probes used to reverse-engineer the session-log format
 ```
 
 ## Test
