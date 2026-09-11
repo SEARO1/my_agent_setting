@@ -68,3 +68,31 @@
 - User-invoked skills（disable-model-invocation: true，如 grill-me、handoff、ask-matt、to-spec、to-tickets、triage、wayfinder、implement、teach、wait-what 等 22 個）按設計唔會俾 model 自動調用
 - Sync 去 my_agent_setting mirror（skills/ +37 folders）
 
+## 2026-09-11 — 修復 pi-ai session header（opencode-go 400 MissingSessionID）
+
+### 症狀
+- vision-router 睇圖完全失敗：第一個 provider `opencode-go/qwen3.7-plus` 回 400 `MissingSessionID`（"Request is missing x-opencode-session"），fallback 落 plugin 內建免費 OVH chain 又全部 429 rate limit。
+- 查實：live install 嘅 `dsh-llm-pi-ai/lib/index.js` **未 patch**（`function requestHeaders(headers)` 原裝 signature）。即係 repo 2026-09-09 嗰個 repair 一直未 apply 落部機。
+
+### 直接 probe opencode Go gateway（實測，2026-09-11）
+URL `https://opencode.ai/zen/go/v1/chat/completions`，model `qwen3.7-plus`，除咗 session header 之外其他一樣：
+
+| request header | 結果 |
+|---|---|
+| （無 session header） | 400 MissingSessionID |
+| `x-deepseek-harness-session-id: test-xxxxxxxx` | **200 OK** |
+| `x-opencode-session: test-xxxxxxxx` | 200 OK |
+| `x-session-affinity: test-xxxxxxxx` | 400 MissingSessionID |
+
+→ opencode Go 只係要「有 session header 做 routing」，DSH 自己個 `x-deepseek-harness-session-id` 一樣收貨。
+→ pi-ai 內建嘅 session affinity header 只有 `x-session-id`（openrouter）/ `session_id` / `x-client-request-id` / `x-session-affinity`（`compat.sendSessionAffinityHeaders`），冇 opencode 用嘅名，所以一定要靠 patch 補。
+
+### 做咗嘅嘢
+- `node repairs/apply-session-header.mjs <path>`（兩個 copy：`~/.dsh/profiles/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js` 同 nested 一份，其實同 `C:\Users\cheun\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\...` 係同一條 hardlink）
+- `node repairs/verify-session-header.mjs <path>` → PASS（per-session header、無 session id 時唔會亂作、case-insensitive collision、custom header 保留、call site 正確）
+- 未 patch 版本 backup 咗去 `_trash/pi-ai-session-header-20260909/index.js`
+
+### 注意
+- **DSH 要重啟先生效**（adapter module 開機已經 import 咗入 memory）。
+- vision-router 係行 `ctx.llm.stream()` → 同一個 pi-ai adapter，所以呢個 patch 同時修好 opencode-go 嘅 chat 同 vision。
+
