@@ -74,6 +74,14 @@ llm-pi-ai:
         #   contextWindow: 500000
         #   maxTokens: 500000
       apiKeyEnv: OPENCODE_GO_API_KEY
+    opencode-go-deepseek:
+      displayName: OpenCode Go - DeepSeek V4.1
+      apiKeyEnv: OPENCODE_GO_API_KEY
+      api: openai-completions
+      baseURL: https://opencode.ai/zen/go/v1
+      models:
+        - id: deepseek-v4.1-flash
+          name: DeepSeek V4.1 Flash
     poe:
       apiKeyEnv: POE_API_KEY
       api: openai-completions
