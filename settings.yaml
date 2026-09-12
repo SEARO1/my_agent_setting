@@ -79,9 +79,18 @@ llm-pi-ai:
       apiKeyEnv: OPENCODE_GO_API_KEY
       api: openai-completions
       baseURL: https://opencode.ai/zen/go/v1
+      reasoning: max
       models:
         - id: deepseek-v4.1-flash
           name: DeepSeek V4.1 Flash
+          input: [text, image]
+          reasoningEfforts:
+            off: null
+            high: high
+            max: max
+          compat:
+            thinkingFormat: deepseek
+            supportsReasoningEffort: true
     poe:
       apiKeyEnv: POE_API_KEY
       api: openai-completions
