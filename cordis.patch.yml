@@ -2,6 +2,11 @@
 # Paths use !!js process.env.USERPROFILE so they work on any Windows machine.
 # REQUIRED: put the knowledge folder at <USERPROFILE>\dsh-kb\knowledge
 # (or edit the paths below / set KB_ROOT via env).
+- id: attachment-local
+  config:
+    maxImageDimension: 4096
+    maxImagePixels: 64000000
+    maxImageBytes: 20971520
 
 # Enable session full-text search (FTS) in the Web UI sidebar.
 - id: session-query-sqlite
@@ -52,3 +57,18 @@
         reconnect:
           enabled: true
           maxAttempts: 5
+
+# Cross-session awareness MCP server: a DSH session can see what the other sessions on
+# this machine are doing (peers / session_detail / announce / board / whoami / overlaps).
+# Reads DSH session logs read-only (skill: ~/.dsh/skills/cross-session). serverName must stay
+# 'crosssession' - caller identification matches mcp__crosssession__* records.
+# Source repo: ~/.dsh/repos/agent_cross-session_mcp  (update = git -C that dir pull)
+- insert:
+    - id: mcp-cross-session
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: crosssession
+        transport: stdio
+        command: node
+        args: ['C:\Users\cheun\.dsh\repos\agent_cross-session_mcp\server.mjs']
+        cwd: 'C:\Users\cheun\.dsh\repos\agent_cross-session_mcp'
