@@ -67,6 +67,21 @@
 - DSH 已 hot-reload：15 個 model-invoked skills 出現喺 catalog（tdd、code-review、grilling、research、prototype、diagnosing-bugs、codebase-design、domain-modeling、resolving-merge-conflicts、writing-for-agents、wizard、git-guardrails-claude-code、migrate-to-shoehorn、scaffold-exercises、setup-pre-commit）
 - User-invoked skills（disable-model-invocation: true，如 grill-me、handoff、ask-matt、to-spec、to-tickets、triage、wayfinder、implement、teach、wait-what 等 22 個）按設計唔會俾 model 自動調用
 - Sync 去 my_agent_setting mirror（skills/ +37 folders）
+## 2026-09-10 — Repo 同步（settings.yaml + cordis.patch.yml + skill inventory）
+
+### 同步內容（live `~/.dsh` → repo）
+- `settings.yaml`：由 live 覆蓋（repo 版停留喺 2026-09-09）。差異：`agent-presets.default: standard → ptc`、`agent-default-model: deepseek-v4.1-flash-expires-on-0910 → deepseek-v4-flash`（provider 仍 deepseek-official）、新增 `ui-chat.transcriptView: normal`
+- `cordis.patch.yml`：repo 版落後（只得 Exa 3 段）；改用 live `profiles/web/cordis.patch.yml` 內容
+  - 新增 `attachment-local` 放寬圖片限制（maxImageDimension 4096）+ 12 個 `ui-skin-*: disabled` 段 + OpenViking 註解
+  - ⚠️ live 檔硬編碼咗真 EXA key；repo 版 sanitize 做 `!!js process.env.EXA_API_KEY`，path 保持 portable（`process.env.USERPROFILE`）。查過 git history 冇 leak 過真 key
+- `skills/`：548 個檔案 hash 全部一致，只有 `web-research-fallback/SKILL.md` 唔同 → **repo 版較新**（live 版仲係「web_search 冇 key、一律用 Bing fallback」舊版本，同 AGENTS.md 規則 4 矛盾，待同步返 live）
+- `.agent-presets/code`、`repairs/*`：一致
+- live 另有 `.agent-presets/anchored-standard`（8 檔）、`liangshen`（5 檔）未 mirror；`knowledge/` 已 gitignore（規則 11）
+
+### Skill inventory（103 個）
+- `~/.dsh/skills/`：103 個 skill folder、548 個檔案；80 個 model-invocable、23 個 user-only（`disable-model-invocation: true`）
+- 來源 pack：mattpocock/skills 37、n8n 16、superpowers 系 14、Claude Code plugin 開發系 ~12、Supabase 系 5、DSH 自製 3（dsh-internals / memory-distill / web-research-fallback）、單件（diagram-design、agent-code-review、cardputer-buddy、m5-onboard 等）
+
 
 ## 2026-09-11 — 修復 pi-ai session header（opencode-go 400 MissingSessionID）
 
@@ -95,4 +110,22 @@ URL `https://opencode.ai/zen/go/v1/chat/completions`，model `qwen3.7-plus`，�
 ### 注意
 - **DSH 要重啟先生效**（adapter module 開機已經 import 咗入 memory）。
 - vision-router 係行 `ctx.llm.stream()` → 同一個 pi-ai adapter，所以呢個 patch 同時修好 opencode-go 嘅 chat 同 vision。
+
+## 2026-09-15 — Exa key 洩漏處理 + 完成卡住咗嘅 merge
+
+### Exa API key 洩漏（public repo）
+- 發現 `SEARO1/my_agent_setting`（**public**）嘅 `origin/main:cordis.patch.yml` 有真 Exa key 明文（commit `4173d34` 引入），raw URL 實測直接讀得到
+- 部機另有 3 份 copy：Windows User env `EXA_API_KEY`、`~/.dsh/.credentials.yaml`、`~/.dsh/.env`；repo working tree 都有一份（merge 帶入）
+- 用戶喺 dashboard.exa.ai 開新 key 並撤銷舊 key；用 `~/.dsh/rotate-exa-key.ps1` 更新（SecureString 輸入，唔會入 session transcript）
+- 實測：舊 key → HTTP 401（已撤銷）、新 key → HTTP 200。舊 key 已死，public history 嗰份唔再構成風險
+- ⚠️ 要重啟 DSH 先用到 web_search（running process 仍揸住舊 env，實測回 Invalid API key）
+
+### Merge 收尾（local 8 vs origin/main 7 commits，兩邊都做咗 cross-session MCP）
+- `settings.yaml`：取 ours（同 live `~/.dsh/settings.yaml` 完全一致）
+- `cordis.patch.yml`：以 live 版為準重建（portable `process.env.USERPROFILE`、`!!js process.env.EXA_API_KEY`）
+  - 丟棄 remote 版嘅硬編碼 `C:\Users\cheun\...` 路徑、明文 Exa key、指向 `OneDrive\Desktop\agent_cross-session_mcp`
+  - 丟棄 remote 版 12 個 `ui-skin-*: disabled`（live 冇裝 dsh-skin，呢部機用唔著）
+  - AWS MCP block 唔 mirror（machine-local；live 有註解 + user decision 2026-09-15），只留低指向 live 嘅註解
+- 保留 remote 帶入嘅 `mcp/agent-cross-session-mcp/`（server + lib + test + install script）同 `skills/cross-session/`
+- 未 push（用戶自己 push）
 

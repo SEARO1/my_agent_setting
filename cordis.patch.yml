@@ -33,30 +33,11 @@
   config:
     searchProvider: exa
 
-# AWS MCP Server (Agent Toolkit for AWS - no additional charge for the server itself;
-# you pay only for AWS resources the agent actually provisions).
-# stdio: uvx mcp-proxy-for-aws -> https://aws-mcp.us-east-1.api.aws/mcp (SigV4).
-# Tool names: mcp__aws__<tool>. Prereq: `aws configure` credentials in ~/.aws first,
-# then restart DSH. Docs search + skill retrieval need no extra IAM grants.
-# uv cache pointed at ~/.cache/uv (default %LOCALAPPDATA%\uv\cache had ACL issues for uvx).
-- insert:
-    - id: mcp-aws
-      name: '@deepseek-ai/dsh-mcp-client'
-      config:
-        serverName: aws
-        transport: stdio
-        command: !!js process.env.USERPROFILE + '\\.local\\bin\\uvx.exe'
-        args:
-          - mcp-proxy-for-aws==1.6.5
-          - https://aws-mcp.us-east-1.api.aws/mcp
-          - --metadata
-          - AWS_REGION=us-east-1
-        env:
-          UV_CACHE_DIR: !!js process.env.USERPROFILE + '\\.cache\\uv'
-        failOnStartupError: false
-        reconnect:
-          enabled: true
-          maxAttempts: 5
+# AWS MCP Server block: intentionally NOT mirrored here (machine-local).
+# Live definition lives in ~/.dsh/profiles/web/cordis.patch.yml:
+#   command: ~/.local/bin/mcp-proxy-for-aws.exe   args: [.. --read-only ..]
+#   (uv-installed tool + AWS free-plan account, specific to this laptop)
+# User decision 2026-09-15. Copy that block back when restoring this machine.
 
 # Cross-session awareness MCP server: a DSH session can see what the other sessions on
 # this machine are doing (peers / session_detail / announce / board / whoami / overlaps).

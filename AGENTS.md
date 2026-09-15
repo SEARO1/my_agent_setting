@@ -26,6 +26,7 @@
 9. **Workspace 有 `AGENTS.md` 就優先跟佢** — 如果而家嘅 workspace（cwd）入面有 `AGENTS.md`，就**優先跟 workspace 嗰個**；呢個 global 檔案只係 base／fallback。兩邊規則衝突時，以 workspace 嘅 `AGENTS.md` 為準。
 10. **Budget-conscious（窮鬼／超慳）** — 用戶自認「究極窮鬼，就嚟養唔起大肥魚（DeepSeek）」。任何涉及 pricing／訂閱／API 費用／模型選擇嘅建議，**一律由 free tier（免費層）出發**，再考慮 CP 值（性價比）高嘅選項；**唔好一嚟就推薦最貴／最高級 plan**，亦唔好假設用戶會自願課金。做任何會產生持續費用嘅嘢之前，先諗有冇免費替代（本地模型、free tier、現有 key 等）。
 11. **Knowledge 由 OpenViking 自動管理** — 唔使再手動寫／更新 knowledge 筆記（`knowledge/` 目錄・`viking://resources/knowledge`）——所有知識靠 OpenViking session capture 自動記錄（events/entities/preferences），要查就用 `mcp__openviking__*` tools。舊筆記留低做 reference，唔好刪。決定日：2026-08-22。
+12. **多 session 撞車要 check（防炒粉）** — 開工前如果可能同其他 session 撞（改同一個 repo／workspace、或者跑長任務），先 call `mcp__crosssession__overlaps` 睇下有冇重疊；見到 `⚠ CONFLICT` 或者「兩個 session 都跑 git」就**停手、同用戶講**，建議其中一邊開 `git worktree`（`using-git-worktrees` skill）。想知其他 session 而家做緊咩就 call `mcp__crosssession__peers`。唔使每個 turn 都 call，只喺「可能撞」嘅情況用。設定日：2026-09-12。
 
 ## 打 Code 規則（寫 code 任務適用）
 - **DRY（Don't Repeat Yourself）** — 相同邏輯／代碼重複 2 次以上就要抽做共用 function／helper／元件，唔好 copy-paste；改嘢時見到重複 code 順手抽埋。
