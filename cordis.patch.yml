@@ -53,3 +53,10 @@
         command: node
         args: ['C:\Users\cheun\.dsh\repos\agent_cross-session_mcp\server.mjs']
         cwd: 'C:\Users\cheun\.dsh\repos\agent_cross-session_mcp'
+
+# Keep plugin updates from terminating the active DSH host. Changes that need
+# a new boot remain pending until DSH is restarted manually.
+- id: dsh-market
+  name: dshmarket
+  config:
+    allowRestart: false
