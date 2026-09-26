@@ -108,3 +108,49 @@
 
 
 
+## 2026-09-11 — 修復 pi-ai session header（opencode-go 400 MissingSessionID）
+
+### 症狀
+- vision-router 睇圖完全失敗：第一個 provider `opencode-go/qwen3.7-plus` 回 400 `MissingSessionID`（"Request is missing x-opencode-session"），fallback 落 plugin 內建免費 OVH chain 又全部 429 rate limit。
+- 查實：live install 嘅 `dsh-llm-pi-ai/lib/index.js` **未 patch**（`function requestHeaders(headers)` 原裝 signature）。即係 repo 2026-09-09 嗰個 repair 一直未 apply 落部機。
+
+### 直接 probe opencode Go gateway（實測，2026-09-11）
+URL `https://opencode.ai/zen/go/v1/chat/completions`，model `qwen3.7-plus`，除咗 session header 之外其他一樣：
+
+| request header | 結果 |
+|---|---|
+| （無 session header） | 400 MissingSessionID |
+| `x-deepseek-harness-session-id: test-xxxxxxxx` | **200 OK** |
+| `x-opencode-session: test-xxxxxxxx` | 200 OK |
+| `x-session-affinity: test-xxxxxxxx` | 400 MissingSessionID |
+
+→ opencode Go 只係要「有 session header 做 routing」，DSH 自己個 `x-deepseek-harness-session-id` 一樣收貨。
+→ pi-ai 內建嘅 session affinity header 只有 `x-session-id`（openrouter）/ `session_id` / `x-client-request-id` / `x-session-affinity`（`compat.sendSessionAffinityHeaders`），冇 opencode 用嘅名，所以一定要靠 patch 補。
+
+### 做咗嘅嘢
+- `node repairs/apply-session-header.mjs <path>`（兩個 copy：`~/.dsh/profiles/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js` 同 nested 一份，其實同 `C:\Users\cheun\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\...` 係同一條 hardlink）
+- `node repairs/verify-session-header.mjs <path>` → PASS（per-session header、無 session id 時唔會亂作、case-insensitive collision、custom header 保留、call site 正確）
+- 未 patch 版本 backup 咗去 `_trash/pi-ai-session-header-20260909/index.js`
+
+### 注意
+- **DSH 要重啟先生效**（adapter module 開機已經 import 咗入 memory）。
+- vision-router 係行 `ctx.llm.stream()` → 同一個 pi-ai adapter，所以呢個 patch 同時修好 opencode-go 嘅 chat 同 vision。
+
+## 2026-09-15 — Exa key 洩漏處理 + 完成卡住咗嘅 merge
+
+### Exa API key 洩漏（public repo）
+- 發現 `SEARO1/my_agent_setting`（**public**）嘅 `origin/main:cordis.patch.yml` 有真 Exa key 明文（commit `4173d34` 引入），raw URL 實測直接讀得到
+- 部機另有 3 份 copy：Windows User env `EXA_API_KEY`、`~/.dsh/.credentials.yaml`、`~/.dsh/.env`；repo working tree 都有一份（merge 帶入）
+- 用戶喺 dashboard.exa.ai 開新 key 並撤銷舊 key；用 `~/.dsh/rotate-exa-key.ps1` 更新（SecureString 輸入，唔會入 session transcript）
+- 實測：舊 key → HTTP 401（已撤銷）、新 key → HTTP 200。舊 key 已死，public history 嗰份唔再構成風險
+- ⚠️ 要重啟 DSH 先用到 web_search（running process 仍揸住舊 env，實測回 Invalid API key）
+
+### Merge 收尾（local 8 vs origin/main 7 commits，兩邊都做咗 cross-session MCP）
+- `settings.yaml`：取 ours（同 live `~/.dsh/settings.yaml` 完全一致）
+- `cordis.patch.yml`：以 live 版為準重建（portable `process.env.USERPROFILE`、`!!js process.env.EXA_API_KEY`）
+  - 丟棄 remote 版嘅硬編碼 `C:\Users\cheun\...` 路徑、明文 Exa key、指向 `OneDrive\Desktop\agent_cross-session_mcp`
+  - 丟棄 remote 版 12 個 `ui-skin-*: disabled`（live 冇裝 dsh-skin，呢部機用唔著）
+  - AWS MCP block 唔 mirror（machine-local；live 有註解 + user decision 2026-09-15），只留低指向 live 嘅註解
+- 保留 remote 帶入嘅 `mcp/agent-cross-session-mcp/`（server + lib + test + install script）同 `skills/cross-session/`
+- 未 push（用戶自己 push）
+
