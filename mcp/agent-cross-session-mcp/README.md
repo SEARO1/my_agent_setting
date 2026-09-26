@@ -35,7 +35,7 @@ Example `peers` output:
 DSH sessions — 2 shown of 12 on disk · 1 running a tool · active within 30m · now 09-12 01:56
 
 1) 74f51504
-   workspace : C:\Users\cheun\OneDrive\Desktop\agent_cross-session_mcp
+   workspace : C:\Users\cheun\Desktop\agent_cross-session_mcp
    status    : busy — running run_code (last event 1s ago)
    said      : (turn in progress)
 
@@ -110,8 +110,8 @@ Add one row to `~/.dsh/profiles/<profile>/cordis.patch.yml`:
         serverName: crosssession
         transport: stdio
         command: node
-        args: ['C:\Users\cheun\OneDrive\Desktop\agent_cross-session_mcp\server.mjs']
-        cwd: 'C:\Users\cheun\OneDrive\Desktop\agent_cross-session_mcp'
+        args: ['C:\Users\cheun\Desktop\agent_cross-session_mcp\server.mjs']
+        cwd: 'C:\Users\cheun\Desktop\agent_cross-session_mcp'
 ```
 
 Notes:

@@ -15,7 +15,7 @@
 
 # Cross-session awareness MCP server (2026-09-12): a DSH session can see what the other
 # sessions on this machine are doing (peers / session_detail / announce / board / whoami).
-# Source: C:\Users\cheun\OneDrive\Desktop\agent_cross-session_mcp (reads session logs read-only).
+# Source: C:\Users\cheun\Desktop\agent_cross-session_mcp (moved out of OneDrive 2026-09-17).
 # serverName must stay 'crosssession' - caller identification matches mcp__crosssession__* records.
 - insert:
     - id: mcp-cross-session
@@ -24,15 +24,15 @@
         serverName: crosssession
         transport: stdio
         command: node
-        args: ['C:\Users\cheun\OneDrive\Desktop\agent_cross-session_mcp\server.mjs']
-        cwd: 'C:\Users\cheun\OneDrive\Desktop\agent_cross-session_mcp'
+        args: ['C:\Users\cheun\Desktop\agent_cross-session_mcp\server.mjs']
+        cwd: 'C:\Users\cheun\Desktop\agent_cross-session_mcp'
 
 # Exa web search provider (free tier) - 2026-08-22. Key lives in ~/.dsh/.credentials.yaml (EXA_API_KEY), not in this file.
 - insert:
     - id: web-search-exa
       name: '@deepseek-ai/dsh-web-search-exa'
       config:
-        apiKey: 89593775-74fc-46e5-baab-c46b87178c07
+        apiKey: !!js process.env.EXA_API_KEY
         searchType: auto
 
 # Pin Exa as the active search provider (deepseek + exa both registered - must pick one or WEB_PROVIDER_AMBIGUOUS).

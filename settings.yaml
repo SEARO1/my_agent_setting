@@ -74,11 +74,15 @@ llm-pi-ai:
         #   contextWindow: 500000
         #   maxTokens: 500000
       apiKeyEnv: OPENCODE_GO_API_KEY
+      headers:
+        x-opencode-session: dsh-static-f20b3c13
     opencode-go-deepseek:
       displayName: OpenCode Go - DeepSeek V4.1
       apiKeyEnv: OPENCODE_GO_API_KEY
       api: openai-completions
       baseURL: https://opencode.ai/zen/go/v1
+      headers:
+        x-opencode-session: dsh-static-f20b3c13
       reasoning: max
       models:
         - id: deepseek-v4.1-flash
@@ -119,7 +123,7 @@ llm-pi-ai:
             supportsReasoningEffort: true
 agent-default-model:
   provider: deepseek-official
-  model: deepseek-v4-flash
+  model: deepseek-flash
   reasoningEffort: max
 ui-conversation:
   busyEnter: steer
@@ -134,7 +138,17 @@ ui-theme:
   preference: dark
 vision-router:
   onboardingSeen: true
-  tool: false
+  tool: true
+  freeCloudFirst: false
+  providers:
+    - provider: deepseek-official
+      model: deepseek-flash
+      fallbacks:
+        - deepseek-v4-pro
+    - provider: vision-http
+      model: ovh/Qwen3.5-397B-A17B
+      fallbacks: []
+
 pet:
   visible: true
   size: 160
@@ -153,18 +167,19 @@ llm-deepseek:
   models:
     - id: deepseek-v4-flash
       name: DeepSeek-V4-Flash
+      description: Fast, efficient, and economical; suited to focused, routine, or
+        parallel tasks.
       contextWindow: 1000000
-    - id: deepseek-v4-pro
-      name: DeepSeek-V4-Pro
-      contextWindow: 1000000
-    - id: deepseek-v4-flash-vision-exp
-      name: DeepSeek-V4-Flash-Vision
-      contextWindow: 1000000
-      maxTokens: 384000
       inputModalities:
         - text
-        - image
-    - id: deepseek-v4.1-flash-expires-on-0910
+    - id: deepseek-v4-pro
+      name: DeepSeek-V4-Pro
+      description: Stronger agentic coding, knowledge, and difficult reasoning; suited
+        to complex or quality-critical tasks at higher cost.
+      contextWindow: 1000000
+      inputModalities:
+        - text
+    - id: deepseek-flash
       name: DeepSeek-V4.1-Flash
       inputModalities:
         - text

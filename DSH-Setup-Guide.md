@@ -162,9 +162,9 @@ Tools（模型直接 call）：
    - `settings.yaml` → `~/.dsh/settings.yaml`
    - `skills/*` → `~/.dsh/skills/`
    - `cordis.patch.yml` → `~/.dsh/profiles/web/cordis.patch.yml`（**記住改入面啲路徑**）
-   - `knowledge/` → 你揀嘅位置（預設 `OneDrive/Desktop/knowledge`；唔同位置要改 mcp-knowledge 個 cwd/args 同 KB_ROOT）
+   - `knowledge/` → 你揀嘅位置（預設 `Desktop/knowledge`；唔同位置要改 mcp-knowledge 個 cwd/args 同 KB_ROOT）
 6. `cd knowledge/mcp-server && npm install`
-7. 裝 vision-router plugin：`dsh plugin --profile web add dsh-vision-router`（圖片識圖用；設定喺 settings.yaml 或 UI 改）
+7. 裝 vision-router plugin：`dsh plugin --profile web add dsh-vision-router`（像素級視覺工具：crop / pixel diff / ground / OCR）。**純睇圖唔靠佢** —— 見 §15：`deepseek-flash` 喺 `settings.yaml` 聲明咗 `inputModalities: [text, image]` 就識睇圖
 8. Restart DSH，verify：
    - Skills 喺 catalog 見到
    - 側邊欄放大鏡搜尋到內容（FTS）
@@ -276,4 +276,84 @@ EXA_API_KEY: 你嘅 key
 
 ---
 
-*Generated 2026-08-16 by DSH agent（2026-08-22 更新：§13 OpenViking + §14 Exa）. 配合 dsh-setup-bundle.zip 使用.*
+# 15. Vision：agent 直接睇圖（2026-09-10）
+
+> **結論先講**：唔使靠 vision-router 嘅免費視覺鏈 —— DeepSeek 官方 `deepseek-flash`（即 agent 默認 model）**本身就支援圖像理解**。之前睇唔到圖，純粹係 `~/.dsh/settings.yaml` 冇幫佢聲明圖片能力：DSH 對「手動輸入嘅 model」一律當純文本，貼圖會喺送出前被拒，並點名該 model。
+
+## 15.1 官方依據
+
+| 來源 | 重點 |
+|---|---|
+| [DeepSeek 圖像理解](https://api-docs.deepseek.com/zh-cn/guides/vision) | `deepseek-flash` 支援圖片輸入（base64 data URL / 公開 URL / Files API）；舊名 `deepseek-v4-flash-vision-exp` 仍可調用但**已下線**，會 route 去最新 Flash |
+| [DeepSeek 模型 & 價格](https://api-docs.deepseek.com/zh-cn/quick_start/pricing) | `deepseek-flash` ＝ V4.1-Flash，**圖像理解：支持**；`deepseek-v4-pro` **唔支持**（且 2026-09-14 後 V4 Pro 請求會 route 去 V4.1 Flash） |
+| [DSH 配置模型](https://deepseek-harness.github.io/deepseek-harness/guide/providers) | 「手動輸入的模型在自己聲明之前一律按純文本對待」→ 要喺 `settings.yaml` 幫該 model 加圖片輸入聲明 |
+
+## 15.2 settings.yaml 要改嘅三處
+
+```yaml
+# (1) 官方 DeepSeek route：deepseek-flash 聲明食圖（llm-deepseek 用 inputModalities）
+llm-deepseek:
+  models:
+    - id: deepseek-flash
+      name: DeepSeek-V4.1-Flash
+      inputModalities:
+        - text
+        - image        # ← 呢行就係「眼睛」；冇佢 = 貼圖即被拒
+
+# (2) 開返 vision_* 工具集（crop / ground / pixel diff / OCR …）
+vision-router:
+  onboardingSeen: true
+  tool: true           # false = 所有 vision_* 工具直接 throw「vision tools are disabled」
+  freeCloudFirst: false  # true = 免責 OVH 免費鏈行先，長期 429 會食晒 45s budget
+
+# (3) 視覺 backend 鏈：官方 Flash 行先，OVH 免費做兜底
+  providers:
+    - provider: deepseek-official
+      model: deepseek-flash
+      fallbacks:
+        - deepseek-v4-pro
+    - provider: vision-http
+      model: ovh/Qwen3.5-397B-A17B
+      fallbacks: []
+```
+
+## 15.3 新機步驟
+
+1. Copy `settings.yaml`（上面三處已包含）；`.credentials.yaml` 要有 `DEEPSEEK_API_KEY`
+2. （可選）`dsh plugin --profile web add dsh-vision-router` —— 只係為咗 `vision_crop` / `vision_pixel_diff` / `vision_ground` 呢啲像素級工具；**純睇圖唔需要**
+3. 熱更新即可，唔使 restart（settings 改完下一個 request 生效）
+4. 驗證：開新 session 直接貼圖
+
+## 15.4 點驗證（我哋實測過）
+
+- **Agent 側**：叫 agent `read_image` 一張已知內容嘅圖，讀得到入面嘅字就代表通
+- **API 側 smoke test**（唔經 DSH，最快知 key + model 得唔得）：
+
+```powershell
+$key = (Select-String -Path "$env:USERPROFILE\.dsh\.credentials.yaml" -Pattern '^\s*DEEPSEEK_API_KEY:\s*(\S+)').Matches[0].Groups[1].Value
+$b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\path\to\image.png'))
+$body = @{ model='deepseek-flash'; max_tokens=512; messages=@(@{ role='user'; content=@(
+  @{type='text'; text='圖中嘅字係咩？'}, @{type='image_url'; image_url=@{ url="data:image/png;base64,$b64" }}
+)}) } | ConvertTo-Json -Depth 12
+(Invoke-RestMethod -Uri 'https://api.deepseek.com/chat/completions' -Method Post `
+  -Headers @{ Authorization="Bearer $key" } -ContentType 'application/json' -Body $body).choices[0].message.content
+```
+
+## 15.5 成本（窮鬼參考）
+
+- 圖片當 token 計：一張 600×400 細圖 ≈ **235 prompt tokens**
+- `deepseek-flash` 輸入：空閒 **1 元 / 百萬 tokens**（高峰 2 元）；輸出：空閒 4 元（高峰 8 元）
+- 高峰時段 = 北京時間**週一至五 09:00–12:00、14:00–18:00**，其餘半價
+- 換算：**一千張細圖 ≈ 幾毫子**
+
+## 15.6 坑（重要）
+
+- `vision-router.tool: false` 唔會報錯，只會令每個 `vision_*` call throw `VISION_TOOLS_DISABLED`
+- 內建免費視覺鏈 OVH 匿名端點 = **每 IP、每 model、每分鐘 2 次**，實測長期 `429`；配合 `freeCloudFirst: true` 會先撞 5 個免費 model 全部 429，食晒 45 秒 task budget，令付費 backend 永遠輪唔到 → 症狀係「所有 backend 都 unavailable」，但要怪嘅係**排隊次序**，唔係 config 壞
+- Backend 一旦全 fail，**同一輪（turn）內**再 call vision_* 會即刻回 cached failure，唔會出網絡 —— 要新一輪先重試
+- 想 100% 免費替代：智譜 `glm-4.6v-flash`（永久免費，plugin 有現成 preset `presets/zhipu.yaml`，要自己開 bigmodel.cn key）；OpenRouter `:free`（50 req/日，名單會輪換）
+- 本機冇裝 tesseract → `vision_ocr` 冇本地 fallback，一律走網絡
+
+---
+
+*Generated 2026-08-16 by DSH agent（2026-08-22 更新：§13 OpenViking + §14 Exa；2026-09-10 更新：§15 Vision 睇圖）. 配合 dsh-setup-bundle.zip 使用.*

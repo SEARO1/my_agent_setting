@@ -18,7 +18,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $dsh = if ($env:DSH_HOME) { $env:DSH_HOME } else { Join-Path $env:USERPROFILE '.dsh' }
-$mirror = if ($env:CROSS_SESSION_MIRROR) { $env:CROSS_SESSION_MIRROR } else { Join-Path $env:USERPROFILE 'OneDrive/Desktop/my_agent_setting' }
+$mirror = if ($env:CROSS_SESSION_MIRROR) { $env:CROSS_SESSION_MIRROR } else { Join-Path $env:USERPROFILE 'Desktop/my_agent_setting' }
 if (-not (Test-Path $mirror)) {
   Write-Output ('mirror repo not found at ' + $mirror + ' - mirror step skipped')
   $mirror = $null

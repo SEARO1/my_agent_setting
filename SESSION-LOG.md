@@ -81,5 +81,30 @@
 ### Skill inventory（103 個）
 - `~/.dsh/skills/`：103 個 skill folder、548 個檔案；80 個 model-invocable、23 個 user-only（`disable-model-invocation: true`）
 - 來源 pack：mattpocock/skills 37、n8n 16、superpowers 系 14、Claude Code plugin 開發系 ~12、Supabase 系 5、DSH 自製 3（dsh-internals / memory-distill / web-research-fallback）、單件（diagram-design、agent-code-review、cardputer-buddy、m5-onboard 等）
+## 2026-09-10 — Vision 修復：agent 直接睇圖（deepseek-flash 原生 multimodal）
+
+### 問題
+- 用戶貼圖，agent 完全睇唔到：`vision_describe` 回 `vision tools are disabled in the Vision Router settings`（live settings 係 `vision-router.tool: false`）
+- 開返 tool 之後仍然全 fail：內建免費視覺鏈（OVH 匿名端點 5 個 model）全數 `429 rate limit`
+
+### 根因（查官方文檔後確認）
+- DeepSeek 官方 `deepseek-flash`（= agent 默認 model）**本身支援圖像理解**；但 `settings.yaml` 手動列咗 `llm-deepseek.models` 又冇聲明 `inputModalities` → DSH 一律當純文本，貼圖送出前已被拒（DSH 文檔明講：手動輸入嘅 model 自己聲明之前一律按純文本對待）
+- `freeCloudFirst: true` + OVH 免費端點（每 IP / model / 分鐘 2 次）長期 429，會食晒 45s vision task budget → 付費 backend 永遠輪唔到，症狀係「所有 backend unavailable」
+
+### 改動（`~/.dsh/settings.yaml`）
+- `vision-router.tool: false → true`
+- `llm-deepseek.models` 嘅 `deepseek-flash` 加 `inputModalities: [text, image]`；刪走已下線嘅 `deepseek-v4-flash-vision-exp`（官方：舊名會 route 去最新 Flash）
+- `vision-router.freeCloudFirst: false`；`providers` 改成 `deepseek-official/deepseek-flash`（fallback `deepseek-v4-pro`）→ `vision-http/ovh` 兜底
+- 改動前備份：`~/.dsh/_trash/settings-before-vision-enable-20260910.yaml`
+
+### 驗證（實測，唔係「應該得」）
+- 生成已知內容測試圖 → 直接打 `api.deepseek.com`（394 tokens ≈ 0.001 元）→ 回 `PINEAPPLE-42` ✅
+- `read_image` 同一張圖 → agent 真係讀到圖入面嘅字 ✅
+- 用戶貼 DSH Web GUI 截圖 → agent 讀到 token 數字 / session 名等細節 ✅
+
+### 同步
+- `settings.yaml` → repo（同 live hash 一致）；`DSH-Setup-Guide.md` 新增 §15 + §11 步驟 7 加註
+
+
 
 

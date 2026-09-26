@@ -12,7 +12,7 @@ whenToUse: 用戶要求記住舊 session 內容、定期知識整理、或者想
 
 1. **產生 digests**（script 自動做）：
    ```powershell
-   node "$HOME/OneDrive/Desktop/knowledge/scripts/distill-sessions.mjs"
+   node "$HOME/Desktop/knowledge/scripts/distill-sessions.mjs"
    ```
    輸出去 `knowledge/memory/digests/`，每個 session 一個 .md：標題、日期、用戶問題、回覆節錄、用過嘅工具。
 
