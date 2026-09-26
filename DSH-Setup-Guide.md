@@ -62,12 +62,9 @@ agent-default-model:
   provider: opencode-go          # 默認文字 model（純文字）
   model: deepseek-v4-flash
   reasoningEffort: max
-vision-router:
-  providers:
-    - provider: opencode-go
-      model: kimi-k3             # 視覺路由：圖片用 Kimi K3 睇（UI 設定寫入）
+# vision-router:  ← 2026-09-26 起移除（呢段係舊版 opencode-go + Kimi K3 視覺路由，唔再需要，見 §15）
 # 注意：官方 llm-deepseek route 冇 override — 冇 DEEPSEEK_API_KEY 用唔到
-# 貼圖時揀 model picker 嘅「opencode-go + Auto Vision」group（plugin 自動生成）
+# （舊）貼圖時揀 model picker 嘅「opencode-go + Auto Vision」group（plugin 自動生成）
 ```
 
 ## 5. cordis.patch.yml（profile patch — 所有客製化喺度）
@@ -78,14 +75,14 @@ vision-router:
 1. **session-query-sqlite** → 開 FTS 全文搜尋（`openAt: first-search` + 持久 path）
 2. **mcp-knowledge**（insert 新 row）→ MCP 向量 server
 
-**vision-router 唔喺 patch**：plugin 用 `dsh plugin --profile web add dsh-vision-router` 安裝（bundle patch 自動 mount row），設定喺 `settings.yaml` 嘅 `vision-router:` section（UI：Settings → Plugins → Plugin config → 視覺路由）改，例如 `providers: [{ provider: opencode-go, model: kimi-k3 }]`（圖片用 Kimi K3 睇）。
+**vision-router 唔喺 patch**：佢係 plugin（bundle patch 自動 mount row），唔需要手寫 row —— 但 **2026-09-26 起已經移除，唔再裝**（native 視覺夠用，而且佢會搞爛 desktop app boot；見 §15）。
 
 **唔再做嘅嘢**：官方 `llm-deepseek` route 冇再 hack 去 OpenCode Zen；vision backend 亦唔再用 `httpProviders`（之前喺 patch 度 hardcode）。
 
 **⚠️ Patch 語法（三個形式，好重要）**：
 ```yaml
 # 1. Override 現有 row（row 一定要存在，例如 base bundle 有）
-- id: vision-router
+- id: session-query-sqlite
   config: { ... }
 
 # 2. 停用
@@ -164,7 +161,7 @@ Tools（模型直接 call）：
    - `cordis.patch.yml` → `~/.dsh/profiles/web/cordis.patch.yml`（**記住改入面啲路徑**）
    - `knowledge/` → 你揀嘅位置（預設 `Desktop/knowledge`；唔同位置要改 mcp-knowledge 個 cwd/args 同 KB_ROOT）
 6. `cd knowledge/mcp-server && npm install`
-7. 裝 vision-router plugin：`dsh plugin --profile web add dsh-vision-router`（像素級視覺工具：crop / pixel diff / ground / OCR）。**純睇圖唔靠佢** —— 見 §15：`deepseek-flash` 喺 `settings.yaml` 聲明咗 `inputModalities: [text, image]` 就識睇圖
+7. **唔使裝 vision-router**（2026-09-26 起移除）。純睇圖靠 `deepseek-flash` 喺 `settings.yaml` 聲明咗 `inputModalities: [text, image]`（見 §15）；真係要像素級工具（crop / pixel diff / ground / OCR）先裝，見 §15.7
 8. Restart DSH，verify：
    - Skills 喺 catalog 見到
    - 側邊欄放大鏡搜尋到內容（FTS）
@@ -276,9 +273,12 @@ EXA_API_KEY: 你嘅 key
 
 ---
 
-# 15. Vision：agent 直接睇圖（2026-09-10）
+# 15. Vision：agent 直接睇圖（2026-09-10；2026-09-26 起唔用 vision-router）
 
-> **結論先講**：唔使靠 vision-router 嘅免費視覺鏈 —— DeepSeek 官方 `deepseek-flash`（即 agent 默認 model）**本身就支援圖像理解**。之前睇唔到圖，純粹係 `~/.dsh/settings.yaml` 冇幫佢聲明圖片能力：DSH 對「手動輸入嘅 model」一律當純文本，貼圖會喺送出前被拒，並點名該 model。
+> **結論先講**：DeepSeek 官方 `deepseek-flash`（即 agent 默認 model）**本身就支援圖像理解** —— 之前睇唔到圖，純粹係 `~/.dsh/settings.yaml` 冇幫佢聲明圖片能力：DSH 對「手動輸入嘅 model」一律當純文本，貼圖會喺送出前被拒，並點名該 model。
+>
+> **2026-09-26 決定：唔再裝 vision-router plugin。** 兩個原因：(1) native 視覺（貼圖 / `read_image`）已經夠用；(2) 個 plugin 嘅 client 半邊等 `settingsScope` service，packaged desktop app 冇 publish，一個 pending entry 就打斷成個 desktop boot。
+> 代價：`vision_crop` / `vision_ground` / `vision_pixel_diff` / `vision_ocr` 呢啲**像素級工具冇咗**（要玩就見 §15.7 裝返）。
 
 ## 15.1 官方依據
 
@@ -288,10 +288,10 @@ EXA_API_KEY: 你嘅 key
 | [DeepSeek 模型 & 價格](https://api-docs.deepseek.com/zh-cn/quick_start/pricing) | `deepseek-flash` ＝ V4.1-Flash，**圖像理解：支持**；`deepseek-v4-pro` **唔支持**（且 2026-09-14 後 V4 Pro 請求會 route 去 V4.1 Flash） |
 | [DSH 配置模型](https://deepseek-harness.github.io/deepseek-harness/guide/providers) | 「手動輸入的模型在自己聲明之前一律按純文本對待」→ 要喺 `settings.yaml` 幫該 model 加圖片輸入聲明 |
 
-## 15.2 settings.yaml 要改嘅三處
+## 15.2 settings.yaml 要改嘅一處（2026-09-26 起）
 
 ```yaml
-# (1) 官方 DeepSeek route：deepseek-flash 聲明食圖（llm-deepseek 用 inputModalities）
+# 官方 DeepSeek route：deepseek-flash 聲明食圖（llm-deepseek 用 inputModalities）
 llm-deepseek:
   models:
     - id: deepseek-flash
@@ -299,28 +299,14 @@ llm-deepseek:
       inputModalities:
         - text
         - image        # ← 呢行就係「眼睛」；冇佢 = 貼圖即被拒
-
-# (2) 開返 vision_* 工具集（crop / ground / pixel diff / OCR …）
-vision-router:
-  onboardingSeen: true
-  tool: true           # false = 所有 vision_* 工具直接 throw「vision tools are disabled」
-  freeCloudFirst: false  # true = 免責 OVH 免費鏈行先，長期 429 會食晒 45s budget
-
-# (3) 視覺 backend 鏈：官方 Flash 行先，OVH 免費做兜底
-  providers:
-    - provider: deepseek-official
-      model: deepseek-flash
-      fallbacks:
-        - deepseek-v4-pro
-    - provider: vision-http
-      model: ovh/Qwen3.5-397B-A17B
-      fallbacks: []
 ```
+
+> 舊版本仲有兩處 `vision-router:` 設定（`tool: true` + backend chain 官方 Flash → OVH 免費兜底）—— 2026-09-26 連 plugin 一齊移除，唔再需要。
 
 ## 15.3 新機步驟
 
-1. Copy `settings.yaml`（上面三處已包含）；`.credentials.yaml` 要有 `DEEPSEEK_API_KEY`
-2. （可選）`dsh plugin --profile web add dsh-vision-router` —— 只係為咗 `vision_crop` / `vision_pixel_diff` / `vision_ground` 呢啲像素級工具；**純睇圖唔需要**
+1. Copy `settings.yaml`（上面已包含）；`.credentials.yaml` 要有 `DEEPSEEK_API_KEY`
+2. 唔使裝 vision-router plugin
 3. 熱更新即可，唔使 restart（settings 改完下一個 request 生效）
 4. 驗證：開新 session 直接貼圖
 
@@ -346,7 +332,7 @@ $body = @{ model='deepseek-flash'; max_tokens=512; messages=@(@{ role='user'; co
 - 高峰時段 = 北京時間**週一至五 09:00–12:00、14:00–18:00**，其餘半價
 - 換算：**一千張細圖 ≈ 幾毫子**
 
-## 15.6 坑（重要）
+## 15.6 坑（history：2026-09-10～09-26 裝着 vision-router 時踩過）
 
 - `vision-router.tool: false` 唔會報錯，只會令每個 `vision_*` call throw `VISION_TOOLS_DISABLED`
 - 內建免費視覺鏈 OVH 匿名端點 = **每 IP、每 model、每分鐘 2 次**，實測長期 `429`；配合 `freeCloudFirst: true` 會先撞 5 個免費 model 全部 429，食晒 45 秒 task budget，令付費 backend 永遠輪唔到 → 症狀係「所有 backend 都 unavailable」，但要怪嘅係**排隊次序**，唔係 config 壞
@@ -354,6 +340,18 @@ $body = @{ model='deepseek-flash'; max_tokens=512; messages=@(@{ role='user'; co
 - 想 100% 免費替代：智譜 `glm-4.6v-flash`（永久免費，plugin 有現成 preset `presets/zhipu.yaml`，要自己開 bigmodel.cn key）；OpenRouter `:free`（50 req/日，名單會輪換）
 - 本機冇裝 tesseract → `vision_ocr` 冇本地 fallback，一律走網絡
 
+## 15.7 想裝返 vision-router（可選）
+
+只有需要像素級工具（crop / ground / pixel diff / OCR）先裝：
+
+```
+dsh plugin --profile web add dsh-vision-router
+```
+
+- 之後喺 settings.yaml 加返 `vision-router:` block（`tool: true` + providers chain，見 §15.6 上面舊版示例）
+- **唔好**裝落 `desktop` profile：佢會令 desktop app boot 失敗
+- 想 100% 免費替代：智譜 `glm-4.6v-flash`（永久免費，plugin 有現成 preset `presets/zhipu.yaml`，要自己開 bigmodel.cn key）；OpenRouter `:free`（50 req/日，名單會輪換）
+
 ---
 
-*Generated 2026-08-16 by DSH agent（2026-08-22 更新：§13 OpenViking + §14 Exa；2026-09-10 更新：§15 Vision 睇圖）. 配合 dsh-setup-bundle.zip 使用.*
+*Generated 2026-08-16 by DSH agent（2026-08-22 更新：§13 OpenViking + §14 Exa；2026-09-10 更新：§15 Vision 睇圖；2026-09-26 更新：§15 移除 vision-router）. 配合 dsh-setup-bundle.zip 使用.*

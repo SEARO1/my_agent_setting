@@ -1,0 +1,21 @@
+{
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {
+    "@deepseek-ai/dsh-web-search-exa": "0.1.1-rc.2",
+    "@openviking/dsh-memory-plugin": "^0.2.1",
+    "@sanqi-normal/dsh-webui-market-plugin": "^0.5.5",
+    "dsh-dafeiyu": "^0.1.5"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@sanqi-normal/dsh-webui-market-plugin",
+        "dsh-dafeiyu",
+        "@openviking/dsh-memory-plugin"
+      ]
+    }
+  }
+}

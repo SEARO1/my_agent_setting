@@ -154,3 +154,55 @@ URL `https://opencode.ai/zen/go/v1/chat/completions`，model `qwen3.7-plus`，�
 - 保留 remote 帶入嘅 `mcp/agent-cross-session-mcp/`（server + lib + test + install script）同 `skills/cross-session/`
 - 未 push（用戶自己 push）
 
+## 2026-09-26 — 移除 vision-router（靠 native 視覺）
+
+### 決定
+- 用戶拍板唔要 vision-router：「而家都有眼睛了」—— DeepSeek `deepseek-flash` 本身支援圖像理解，唔想再靠 plugin 嘅視覺鏈
+
+### 改咗嘅嘢（repo）
+- `settings.yaml`：刪走成個 `vision-router:` block（onboardingSeen / tool / freeCloudFirst / providers chain）
+- `README.md`：`settings.yaml` 用途、web profile 內容、裝 plugin 步驟都唔再提 vision-router；補一段 2026-09-26 後續說明（兩個 profile 都唔用）
+- `DSH-Setup-Guide.md`：§15 標題改成「2026-09-26 起唔用 vision-router」；§15.2 只留 `llm-deepseek` 嘅 `inputModalities: [text, image]`（呢個先係「眼睛」）；舊 vision-router 設定 / backend chain / 坑 全部降格做 history，新增 §15.7「想裝返」步驟
+- `profiles/desktop/cordis.patch.yml`：本身已經冇 mount vision-router（同日早啲已經清空 desktop plugins）
+
+### 保留 / 代價
+- 睇圖：native（貼圖 / `read_image`）繼續 work，唔靠 plugin
+- 冇咗：`vision_crop` / `vision_ground` / `vision_pixel_diff` / `vision_ocr` 呢啲像素級工具
+- live 都拆埋（18:12）：`~/.dsh/profiles/web/package.json` 移走 dsh-vision-router，plugin 目錄搬去 `~/.dsh/_trash/web-vision-router-20260926-181244/`，backup 喺 `~/.dsh/backups/web-vision-router-removal-20260926-181244/`
+- **要 restart DSH 先生效**（今個 session 仲有 vision_* tools，因為 plugin 已經 load 咗入 memory）
+
+### 順手發現（唔係今次改動造成）
+- live `~/.dsh/settings.yaml` 今日 17:50 被 desktop app import，縮到淨返 3 條 key（locale / ui-theme / ui-conversation）：
+  opencode-go / POE providers、`llm-deepseek` 嘅 deepseek-flash 圖片聲明（即「眼睛」）**全部唔喺 live 了**
+  → 完整版只剩 repo `settings.yaml`；`~/.dsh/settings.yaml.imported` 只有 6 條 UI namespace
+  → 用戶決定暫時唔還原 live settings.yaml（自己想睇清楚先）
+
+## 2026-09-26（晚）—— 第二次同步：repo ← live（desktop profile 為準）
+
+### 起點
+- 用戶：「check 下而家 deepseek harness 同呢個 repo 差啲咩，差咩就加咩」，並提醒**而家係 desktop app 版，唔係 web 版**
+- 逐個目錄 hash-diff（live `~/.dsh` ↔ repo），分類：真差異 / 只係 CRLF-LF / 刻意 sanitize / runtime state
+
+### 補咗落 repo（live 有 → repo 冇）
+- `.agent-presets/anchored-standard/`（8）+ `liangshen/`（5）
+- `profiles/desktop/cordis.patch.yml`：補 `ui-settings-general` + `agent-default-model`（deepseek-official / deepseek-flash / max）
+- `profiles/desktop/{cordis.yml,pnpm-workspace.yaml,pnpm-lock.yaml}`、`profiles/web/{cordis.yml,pnpm-workspace.yaml}`
+- `profiles/desktop/backup-before-mcp-restore-20260926-165849/`（3 檔）
+- `backups/` 5 份細快照（跳過 104 MB `dsh-cli/` 同 `.credentials.yaml`）
+- `settings.yaml.imported`（repo 嘅 `settings.yaml` 冇郁 —— 佢係還原 template）
+
+### 冇加（避免 drift / 冇用）
+- `profiles/web/cordis.patch.yml`：同 repo 根 `cordis.patch.yml` 內容一樣（只差 Exa key），唔整兩份
+- 16 個只喺 repo 嘅 skill 冇刪（用戶規則：唔好刪嘢）
+- runtime state：sessions / storages / .pnpm-store / node_modules / _trash 大檔 / .dsh-vision-router artifacts
+
+### 對照中嘅真差異（live 側，未改，等用戶話事）
+1. **live web patch 個 Exa key 已死** —— 實測舊 key HTTP 401、credentials 新 key HTTP 200 → `dsh web` 而家 Exa search 壞
+2. **cross-session MCP live 版唔識 session.v4** —— repo 版有 `resolveSessionLogFile()`（`668b38d`），live `~/Desktop/agent_cross-session_mcp` 仲係 09-12 舊版
+3. **16 個 skill 唔喺 live** —— `aws-*` / `learning-*` / `pretty-mermaid`（merge 帶入）
+4. （known）live `settings.yaml` 已經被 desktop app import 到淨返 3 條 key，完整版只剩 repo
+
+### 其他觀察
+- `AGENTS.md`、`skills/memory-distill/SKILL.md`、`profiles/web/package.json` 嘅 hash 差異全部係 CRLF/LF 或尾行 `\n`，內容一致
+- 同一個 workspace 有另外 2 個 session（`a5a94bd2` / `d6636351`，最後寫入 18:15），寫檔前後都要留意撞車
+
