@@ -39,5 +39,6 @@
 ## 技術環境備忘
 - `DSH_HOME` = `~/.dsh`（即 `C:\Users\cheun\.dsh`）：`settings.yaml`（模型/provider 設定）、`skills/`（skills）、`sessions/`（session transcripts）都喺呢度。
 - DSH 真實 source code 喺 `~/.dsh/profiles/node_modules/@deepseek-ai/*`（例如 `dsh-agent-instructions`、`dsh-mcp-client`、`dsh-skill-filesystem`），研究 DSH 內部機制時直接去度睇。
-- 模型 provider 用 `OPENCODE_GO_API_KEY`（`~/.dsh/.credentials.yaml`），唔係 `DEEPSEEK_API_KEY`。
+- 模型 provider 用 `DEEPSEEK_API_KEY`（喺 `~/.dsh/.credentials.yaml`）。`OPENCODE_GO_API_KEY`（OpenCode Go 訂閱）2026-10-05 實測已失效（403 "active subscription required"），唔好再靠佢。
+- OpenViking（記憶系統）config 喺 `~/.openviking/ov.conf`，VLM credential 第一條係 `deepseek-official`（opencode-go 訂閱死咗，排最後）；server 由 `~/.openviking/start-ov.bat` 起（port 1933）。
 - 改咗呢個檔案之後，新 session 會自動載入新內容；同一個 session 入面可以靠 touch（read/write/edit）觸發更新通知。
