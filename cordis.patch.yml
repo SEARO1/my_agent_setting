@@ -76,3 +76,17 @@
 - id: ui-skin-xp
   disabled: true
 # --- end dsh-skin managed ---
+
+# Keep plugin updates from terminating the active DSH host. Changes that need
+# a new boot remain pending until DSH is restarted manually.
+- id: dsh-market
+  name: dshmarket
+  config:
+    allowRestart: false
+
+# DSH 0.1.7-rc.1 V4 uses the local plugin patch under profiles/web/patches/
+# to emit the namespaced producer kind and retain legacy replay compatibility.
+- id: openviking-memory-runtime
+  disabled: false
+- id: openviking-memory
+  disabled: false
