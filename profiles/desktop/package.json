@@ -1,0 +1,25 @@
+{
+  "name": "dsh-profile-desktop",
+  "private": true,
+  "dependencies": {
+    "@argszero/cordis-plugin-content-exists-risk": "0.1.0",
+    "@deepseek-ai/dsh-web-search-exa": "0.2.0-rc.2",
+    "@openviking/dsh-memory-plugin": "0.5.3",
+    "@wxg-prc-cpg/browser-skill-dsh-plugin": "0.3.2",
+    "dsh-drop-caret": "0.2.3",
+    "dshmarket": "1.66.8"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "dsh-drop-caret",
+        "dshmarket",
+        "@argszero/cordis-plugin-content-exists-risk",
+        "@wxg-prc-cpg/browser-skill-dsh-plugin",
+        "@openviking/dsh-memory-plugin"
+      ]
+    }
+  }
+}
