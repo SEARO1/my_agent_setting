@@ -11,7 +11,7 @@
 | 路徑 | 用途 | 還原去邊 |
 |---|---|---|
 | `AGENTS.md` | 用戶全域指令（每個 session 開頭自動載入） | `~/.dsh/AGENTS.md` |
-| `skills/` | skills（124 個目錄；live 有 123，多出 `agent-code-review` 只喺 repo） | `~/.dsh/skills/` |
+| `skills/` | skills（124 個目錄，2026-10-16 對過同 live `~/.dsh/skills/` 一致） | `~/.dsh/skills/` |
 | `mcp/agent-cross-session-mcp/` | cross-session MCP server 源碼（2026-10-16 對過 hash，同 live 一致） | `~/.dsh/repos/agent_cross-session_mcp/` |
 | `profiles/desktop/cordis.patch.yml` | **desktop profile patch** — 裝邊啲 plugin、Exa search、AWS MCP、cross-session MCP、subagent model 清單、UI / permission 設定 | `~/.dsh/profiles/desktop/cordis.patch.yml` |
 | `profiles/desktop/package.json` | **desktop profile plugin 清單**（版本 pin，即換機要裝返嘅嘢） | `~/.dsh/profiles/desktop/package.json` |
