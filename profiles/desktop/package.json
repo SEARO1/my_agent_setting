@@ -5,6 +5,7 @@
     "@argszero/cordis-plugin-content-exists-risk": "0.1.0",
     "@deepseek-ai/dsh-web-search-exa": "0.2.0-rc.2",
     "@openviking/dsh-memory-plugin": "0.5.3",
+    "@tt-a1i/archify-dsh": "1.0.0",
     "@wxg-prc-cpg/browser-skill-dsh-plugin": "0.3.2",
     "dsh-drop-caret": "0.2.3",
     "dshmarket": "1.66.8"
@@ -18,7 +19,9 @@
         "dshmarket",
         "@argszero/cordis-plugin-content-exists-risk",
         "@wxg-prc-cpg/browser-skill-dsh-plugin",
-        "@openviking/dsh-memory-plugin"
+        "@openviking/dsh-memory-plugin",
+        "@deepseek-ai/dsh-experimental-auto-review",
+        "@tt-a1i/archify-dsh"
       ]
     }
   }

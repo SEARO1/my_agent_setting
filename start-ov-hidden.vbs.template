@@ -1,3 +1,0 @@
-Set WshShell = CreateObject("WScript.Shell")
-batPath = "C:\Users\<you>\.openviking\start-ov.bat"
-WshShell.Run """" & batPath & """", 0, False
