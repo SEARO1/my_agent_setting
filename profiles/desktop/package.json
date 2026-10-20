@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@argszero/cordis-plugin-content-exists-risk": "0.1.0",
-    "@deepseek-ai/dsh-web-search-exa": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-web-search-exa": "0.2.1-rc.2",
     "@openviking/dsh-memory-plugin": "0.5.3",
     "@tt-a1i/archify-dsh": "1.0.0",
     "@wxg-prc-cpg/browser-skill-dsh-plugin": "0.3.2",
@@ -21,7 +21,16 @@
         "@wxg-prc-cpg/browser-skill-dsh-plugin",
         "@openviking/dsh-memory-plugin",
         "@deepseek-ai/dsh-experimental-auto-review",
-        "@tt-a1i/archify-dsh"
+        "@tt-a1i/archify-dsh",
+        "@deepseek-ai/dsh-experimental-inspector-profile",
+        "@deepseek-ai/dsh-experimental-agent-team-profile",
+        "@deepseek-ai/dsh-experimental-plugin-market-bundle",
+        "@deepseek-ai/dsh-experimental-ralph-bundle",
+        "@deepseek-ai/dsh-experimental-session-titles-bundle",
+        "@deepseek-ai/dsh-experimental-session-search",
+        "@deepseek-ai/dsh-experimental-terminal-bundle",
+        "@deepseek-ai/dsh-experimental-cot-translation-bundle",
+        "@deepseek-ai/dsh-experimental-tool-worktree"
       ]
     }
   }

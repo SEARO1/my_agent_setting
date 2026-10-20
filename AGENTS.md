@@ -16,9 +16,9 @@
 1. **改檔案前先講聲／確認** — 尤其係 workspace（Desktop）以外嘅檔案，例如 `~/.dsh/*` 底下嘅嘢。
 2. **唔好刪任何嘢** — 要刪嘅嘢 move 去 `_trash/`；真正刪除前一定要問。
 3. **多步驟／大動作任務** — 先開 goal 或 todo 追蹤，再開始做。
-4. **上網查嘢直接用 DSH 內置 `web_search` 工具** — server 已有 Exa search backend（free tier，setup 見 `DSH-Setup-Guide.md`），實測 2026-08-16 正常 work，唔需要 `DEEPSEEK_API_KEY`。萬一 `web_search` 失敗／backend 唔可用，先 fallback：
-   - 用 pwsh + Bing（`https://www.bing.com/search?q=...`）或 DuckDuckGo 嘅 HTML fallback 方法；
-   - 或者直接 fetch 目標網站／docs 嘅原始頁面。
+4. **上網查嘢直接用 DSH 內置 `web_search` / `web_fetch`** — 2026-10-20 起兩個 tool 都走 **DeepSeek 官方 Search / Fetch API**（providers：`deepseek-search-api` / `deepseek-fetch-api`；key 用 `~/.dsh/.credentials.yaml` 嘅 `DEEPSEEK_API_KEY`）。成本 ¥5 / 1000 次（≈¥0.005／次），支援 `site:` / `lang:` / `after:` / `before:` / 引號語法。`web_search` 只回 sources（title / url / snippet / publishedAt），唔會代你寫答案；要全文就 `web_fetch`。
+   - **Exa 對照（可切換，預設唔用）**：`@deepseek-ai/dsh-web-search-exa@0.2.1-rc.2` 已裝但未 active；要切換就改 `~/.dsh/profiles/desktop/cordis.patch.yml` 嘅 `web.searchProvider: exa` + `fetchProvider: http`，再重啟 app。2026-10-20 實測：Exa 慢約 3 倍、貴約 5.7 倍，但搵官方 docs／code 有時更準；兩邊結果重疊率只有 0–43%，屬互補。
+   - 萬一 `web_search` 失敗：先睇 error 係咪 `WEB_PROVIDER_*`（多數係 `cordis.patch.yml` 揀錯 provider，或者 plugin 版本同 host 唔夾），再 fallback：(a) pwsh + Bing（`https://www.bing.com/search?q=...`）或 DuckDuckGo HTML fallback；(b) 直接 fetch 目標網站／docs 原始頁面。
 5. **做嘢前先 check 現狀，唔好做無用功** — 接任何任務（尤其係 setup／安裝／配置／研究某工具）之前，**先檢查用戶環境係咪已經有呢樣嘢**：已裝 plugin（`~/.dsh/profiles/*/package.json` + node_modules）、已有 config（`settings.yaml`、`cordis.patch.yml`）、已有 skill、已裝 package 等。發現已經 setup 好就唔好重複做／唔好拆咗重裝／唔好由零開始研究，直接話俾用戶知現狀再問佢想點。教訓：2026-08-16 vision-router 事件 — 明明已裝好用緊，仲兜咗一大輪研究、改 config、del 再重裝。
 6. **做嘢前先 check memory** — 接任何任務之前（尤其係研究、安裝、配置、或者「整過嗰啲嘢」類型嘅任務），**先查 knowledge base / memory**（用 `kb_search`、或者 grep `Desktop/knowledge/`），睇下之前有冇相關 research、session digest、安裝記錄。發現已有記錄就唔好由零開始研究／重複做，直接引用返舊記錄、話俾用戶知現狀，再問佢想點。教訓：2026-08-16 Claude plugins 話題 — 用戶開口一句「check下你自己memory先」就係提醒我哋先查 RAG 知識庫。
 7. **裝嘢默認裝去 DSH** — 用戶喺呢個 session 叫裝任何嘢（skills、tools、plugins、scripts 等），**除非用戶特別指明目的地**（例如「裝去 Claude Code」/「裝去 `~/.claude`」），一律默認裝去 DSH 生態（`~/.dsh/` 底下，例如 skill 就 `~/.dsh/skills/<name>/SKILL.md`、repos 就 `~/.dsh/repos/`），唔好自行裝去 `~/.claude/`、其他 profile 或系統層面。教訓：diagram-design 安裝時用戶明講「就裝到 dsh 就行，沒必要裝到其他地方」。
@@ -39,6 +39,7 @@
 ## 技術環境備忘
 - `DSH_HOME` = `~/.dsh`（即 `C:\Users\cheun\.dsh`）：`settings.yaml`（模型/provider 設定）、`skills/`（skills）、`sessions/`（session transcripts）都喺呢度。
 - DSH 真實 source code 喺 `~/.dsh/profiles/node_modules/@deepseek-ai/*`（例如 `dsh-agent-instructions`、`dsh-mcp-client`、`dsh-skill-filesystem`），研究 DSH 內部機制時直接去度睇。
+- Web tools 用邊個 provider，睇 `~/.dsh/profiles/desktop/cordis.patch.yml` 個 `- id: web`（`searchProvider` / `fetchProvider`；現時 = DeepSeek Search/Fetch API）。改完要重啟 desktop app 先生效。
 - 模型 provider 用 `DEEPSEEK_API_KEY`（喺 `~/.dsh/.credentials.yaml`）。`OPENCODE_GO_API_KEY`（OpenCode Go 訂閱）2026-10-05 實測已失效（403 "active subscription required"），唔好再靠佢。
 - OpenViking（記憶系統）config 喺 `~/.openviking/ov.conf`，VLM credential 第一條係 `deepseek-official`（opencode-go 訂閱死咗，排最後）；server 由 `~/.openviking/start-ov.bat` 起（port 1933）。
 - 改咗呢個檔案之後，新 session 會自動載入新內容；同一個 session 入面可以靠 touch（read/write/edit）觸發更新通知。
