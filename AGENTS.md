@@ -1,46 +1,46 @@
-# AGENTS.md — 用戶全域指令（User-global）
+# AGENTS.md — User-global instructions
 
-呢個檔案喺每個 session 開頭自動載入。以下係用戶（cheun）嘅設定同規則，跟住做。
+This file loads automatically at the start of every session. These are the settings and rules of the user (cheun) — follow them.
 
-## 溝通偏好
-- 用**廣東話口語**回覆；技術名詞、工具名、code 可以保留英文。
-- 語氣**輕鬆 casual**，唔使拘謹，可以直接講。
-- **先講結論**（TL;DR），有需要先展開細節；唔好長篇大論開場白。
-- 用戶係開發者，熟 coding — 放心用技術 jargon，唔使過度解釋基礎嘢。
-- **回覆跟 `caveman` skill 嘅語氣**（`~/.dsh/skills/caveman/SKILL.md`）：答案先行，無開場白／無 recap／無結語，技術細節全留（code、path、數字、error 原文照抄），廣東話照講（只壓 style 唔壓語言）；要警告、要問用戶嘢、或者不可逆操作先用完整句子。用戶講「normal mode」或「stop caveman」就熄。原因：用戶成日要理解一段時間先知做緊咩，所以要短而準。
+## Communication preferences
+- **Reply language mirrors the user's input**: English in → English out; Chinese in → Chinese out (spoken Cantonese for Chinese). Technical terms, tool names and code may stay English.
+- Tone **relaxed and casual** — no stiffness, speak directly.
+- **Conclusion first** (TL;DR); expand only when needed; no long-winded openings.
+- The user is a developer, fluent in coding — use technical jargon freely, don't over-explain the basics.
+- **Replies follow the `caveman` skill's voice** (`~/.dsh/skills/caveman/SKILL.md`): answer first, no preamble / no recap / no closing; keep every technical detail (code, paths, numbers, error text verbatim); use the user's input language (compress style, not language); full sentences only for warnings, questions to the user, or before an irreversible operation. The user says "normal mode" or "stop caveman" to turn it off. Reason: the user often needs a while to understand what was done, so short and precise.
 
-## 用戶背景
-- 主要用途：研究 DSH 本身、寫 code / 整 project、上網 research、個人助理、自動化 / script。
-- 目前研究主題：DSH（DeepSeek Harness）、OpenClaw、RAG / Agent 記憶系統、Claude Code / 其他 agent 工具生態。
+## User background
+- Main uses: researching DSH itself, coding / building projects, web research, personal assistant, automation / scripts.
+- Current research topics: DSH (DeepSeek Harness), OpenClaw, RAG / agent memory systems, Claude Code / other agent-tool ecosystems.
 
-## 工作規則（必須遵守）
-1. **改檔案前先講聲／確認** — 尤其係 workspace（Desktop）以外嘅檔案，例如 `~/.dsh/*` 底下嘅嘢。
-2. **唔好刪任何嘢** — 要刪嘅嘢 move 去 `_trash/`；真正刪除前一定要問。
-3. **多步驟／大動作任務** — 先開 goal 或 todo 追蹤，再開始做。
-4. **上網查嘢直接用 DSH 內置 `web_search` / `web_fetch`** — 2026-10-20 起兩個 tool 都走 **DeepSeek 官方 Search / Fetch API**（providers：`deepseek-search-api` / `deepseek-fetch-api`；key 用 `~/.dsh/.credentials.yaml` 嘅 `DEEPSEEK_API_KEY`）。成本 ¥5 / 1000 次（≈¥0.005／次），支援 `site:` / `lang:` / `after:` / `before:` / 引號語法。`web_search` 只回 sources（title / url / snippet / publishedAt），唔會代你寫答案；要全文就 `web_fetch`。
-   - **Exa 對照（可切換，預設唔用）**：`@deepseek-ai/dsh-web-search-exa@0.2.1-rc.2` 已裝但未 active；要切換就改 `~/.dsh/profiles/desktop/cordis.patch.yml` 嘅 `web.searchProvider: exa` + `fetchProvider: http`，再重啟 app。2026-10-20 實測：Exa 慢約 3 倍、貴約 5.7 倍，但搵官方 docs／code 有時更準；兩邊結果重疊率只有 0–43%，屬互補。
-   - 萬一 `web_search` 失敗：先睇 error 係咪 `WEB_PROVIDER_*`（多數係 `cordis.patch.yml` 揀錯 provider，或者 plugin 版本同 host 唔夾），再 fallback：(a) pwsh + Bing（`https://www.bing.com/search?q=...`）或 DuckDuckGo HTML fallback；(b) 直接 fetch 目標網站／docs 原始頁面。
-5. **做嘢前先 check 現狀，唔好做無用功** — 接任何任務（尤其係 setup／安裝／配置／研究某工具）之前，**先檢查用戶環境係咪已經有呢樣嘢**：已裝 plugin（`~/.dsh/profiles/*/package.json` + node_modules）、已有 config（`settings.yaml`、`cordis.patch.yml`）、已有 skill、已裝 package 等。發現已經 setup 好就唔好重複做／唔好拆咗重裝／唔好由零開始研究，直接話俾用戶知現狀再問佢想點。教訓：2026-08-16 vision-router 事件 — 明明已裝好用緊，仲兜咗一大輪研究、改 config、del 再重裝。
-6. **做嘢前先 check memory** — 接任何任務之前（尤其係研究、安裝、配置、或者「整過嗰啲嘢」類型嘅任務），**先查 knowledge base / memory**（用 `kb_search`、或者 grep `Desktop/knowledge/`），睇下之前有冇相關 research、session digest、安裝記錄。發現已有記錄就唔好由零開始研究／重複做，直接引用返舊記錄、話俾用戶知現狀，再問佢想點。教訓：2026-08-16 Claude plugins 話題 — 用戶開口一句「check下你自己memory先」就係提醒我哋先查 RAG 知識庫。
-7. **裝嘢默認裝去 DSH** — 用戶喺呢個 session 叫裝任何嘢（skills、tools、plugins、scripts 等），**除非用戶特別指明目的地**（例如「裝去 Claude Code」/「裝去 `~/.claude`」），一律默認裝去 DSH 生態（`~/.dsh/` 底下，例如 skill 就 `~/.dsh/skills/<name>/SKILL.md`、repos 就 `~/.dsh/repos/`），唔好自行裝去 `~/.claude/`、其他 profile 或系統層面。教訓：diagram-design 安裝時用戶明講「就裝到 dsh 就行，沒必要裝到其他地方」。
-8. **Update 咗嘢要同步 `my_agent_setting` repo** — repo（`C:\Users\cheun\Desktop\my_agent_setting`）2026-10-16 起**只鏡像四樣嘢**：`skills/`（→ `~/.dsh/skills/`）、`mcp/agent-cross-session-mcp/`（→ `~/.dsh/repos/agent_cross-session_mcp/`）、`AGENTS.md`（→ `~/.dsh/AGENTS.md`）、`profiles/desktop/{cordis.patch.yml, package.json}`（desktop plugin 設定：裝咗邊啲 plugin + 各自 config）。裝／更新咗 skill、改咗 `AGENTS.md`、或者加減／升級咗 desktop plugin（連 `cordis.patch.yml` config）就要**順手 sync 去 repo**，sync 完先當該 task 完成。web profile、`settings.yaml`、npm/pnpm 嗰套已經**唔再 mirror**（而家用 DSH desktop app）。教訓：2026-08-16 n8n skills — 裝咗 15 個 skills 但唔記得 sync 去 my_agent_setting。
-9. **Workspace 有 `AGENTS.md` 就優先跟佢** — 如果而家嘅 workspace（cwd）入面有 `AGENTS.md`，就**優先跟 workspace 嗰個**；呢個 global 檔案只係 base／fallback。兩邊規則衝突時，以 workspace 嘅 `AGENTS.md` 為準。
-10. **Budget-conscious（窮鬼／超慳）** — 用戶自認「究極窮鬼，就嚟養唔起大肥魚（DeepSeek）」。任何涉及 pricing／訂閱／API 費用／模型選擇嘅建議，**一律由 free tier（免費層）出發**，再考慮 CP 值（性價比）高嘅選項；**唔好一嚟就推薦最貴／最高級 plan**，亦唔好假設用戶會自願課金。做任何會產生持續費用嘅嘢之前，先諗有冇免費替代（本地模型、free tier、現有 key 等）。
-11. **Knowledge 由 OpenViking 自動管理** — 唔使再手動寫／更新 knowledge 筆記（`knowledge/` 目錄・`viking://resources/knowledge`）——所有知識靠 OpenViking session capture 自動記錄（events/entities/preferences），要查就用 `mcp__openviking__*` tools。舊筆記留低做 reference，唔好刪。決定日：2026-08-22。
-12. **多 session 撞車要 check（防炒粉）** — 開工前如果可能同其他 session 撞（改同一個 repo／workspace、或者跑長任務），先 call `mcp__crosssession__overlaps` 睇下有冇重疊；見到 `⚠ CONFLICT` 或者「兩個 session 都跑 git」就**停手、同用戶講**，建議其中一邊開 `git worktree`（`using-git-worktrees` skill）。想知其他 session 而家做緊咩就 call `mcp__crosssession__peers`。唔使每個 turn 都 call，只喺「可能撞」嘅情況用。設定日：2026-09-12。
+## Work rules (must follow)
+1. **Announce / confirm before editing files** — especially files outside the workspace (Desktop), e.g. anything under `~/.dsh/*`.
+2. **Never delete anything** — move things to `_trash/`; always ask before a real deletion.
+3. **Multi-step / large tasks** — open a goal or todo to track them before starting.
+4. **Use DSH's built-in `web_search` / `web_fetch` for web lookups** — since 2026-10-20 both tools go through the **DeepSeek official Search / Fetch API** (providers: `deepseek-search-api` / `deepseek-fetch-api`; key is `DEEPSEEK_API_KEY` in `~/.dsh/.credentials.yaml`). Cost ¥5 / 1000 calls (≈¥0.005 each); supports `site:` / `lang:` / `after:` / `before:` / quoted-phrase syntax. `web_search` returns sources only (title / url / snippet / publishedAt) and will not write an answer for you; use `web_fetch` for full text.
+   - **Exa alternative (switchable, off by default)**: `@deepseek-ai/dsh-web-search-exa@0.2.1-rc.2` is installed but not active; to switch, set `web.searchProvider: exa` + `fetchProvider: http` in `~/.dsh/profiles/desktop/cordis.patch.yml` and restart the app. Measured 2026-10-20: Exa is ~3× slower and ~5.7× more expensive, but sometimes more accurate for official docs / code; the two overlap only 0–43%, so they are complementary.
+   - If `web_search` fails: first check whether the error is `WEB_PROVIDER_*` (usually the wrong provider in `cordis.patch.yml`, or a plugin version mismatch with the host), then fall back to: (a) pwsh + Bing (`https://www.bing.com/search?q=...`) or the DuckDuckGo HTML fallback; (b) fetch the target site / docs raw page directly.
+5. **Check the current state before working; don't do useless work** — before any task (especially setup / install / config / researching a tool), **first check whether the environment already has it**: installed plugins (`~/.dsh/profiles/*/package.json` + node_modules), existing config (`settings.yaml`, `cordis.patch.yml`), existing skills, installed packages. If it is already set up, don't redo it / don't tear it down and reinstall / don't research it from scratch — just tell the user the current state and ask what they want. Lesson: the 2026-08-16 vision-router incident — it was already installed and in use, yet a whole round of research, config edits, and delete-plus-reinstall happened.
+6. **Check memory before working** — before any task (especially research, install, config, or "stuff we did before" tasks), **first check the knowledge base / memory** (`kb_search`, or grep `Desktop/knowledge/`) for prior research, session digests, or install records. If a record exists, don't research from scratch / don't redo it — cite the old record, tell the user the current state, then ask what they want. Lesson: the 2026-08-16 Claude plugins topic — the user opening with "check your own memory first" was a reminder to check the RAG knowledge base first.
+7. **Default install target is DSH** — when the user asks to install anything in this session (skills, tools, plugins, scripts, etc.), **unless the user names a destination explicitly** (e.g. "install to Claude Code" / "install to `~/.claude`"), always default to the DSH ecosystem (under `~/.dsh/`; e.g. skills go to `~/.dsh/skills/<name>/SKILL.md`, repos to `~/.dsh/repos/`); never install to `~/.claude/`, another profile, or system level on your own. Lesson: during the diagram-design install the user said explicitly "just install it into dsh, no need to put it anywhere else".
+8. **Sync changes to the `my_agent_setting` repo** — since 2026-10-16 the repo (`C:\Users\cheun\Desktop\my_agent_setting`) mirrors **only four things**: `skills/` (→ `~/.dsh/skills/`), `mcp/agent-cross-session-mcp/` (→ `~/.dsh/repos/agent_cross-session_mcp/`), `AGENTS.md` (→ `~/.dsh/AGENTS.md`), and `profiles/desktop/{cordis.patch.yml, package.json}` (desktop plugin config: which plugins are installed + their config). After installing/updating a skill, editing `AGENTS.md`, or adding/removing/upgrading a desktop plugin (including its `cordis.patch.yml` config), **sync to the repo right away**; the task is not done until the sync is done. The web profile, `settings.yaml` and the npm/pnpm set are **no longer mirrored** (we use the DSH desktop app now). Lesson: the 2026-08-16 n8n skills — 15 skills installed but not synced to my_agent_setting.
+9. **Prefer the workspace `AGENTS.md` when one exists** — if the current workspace (cwd) has an `AGENTS.md`, **follow that one first**; this global file is only the base / fallback. When the two conflict, the workspace `AGENTS.md` wins.
+10. **Budget-conscious (broke / ultra-frugal)** — the user calls themselves an "ultimate cheapskate" who can barely afford the big fish (DeepSeek). Any advice about pricing / subscriptions / API costs / model choice must **start from the free tier** and only then consider the best value-for-money option; **never jump straight to the most expensive / top-tier plan**, and never assume the user will pay voluntarily. Before anything that incurs ongoing cost, think about free alternatives (local models, free tiers, existing keys, etc.).
+11. **Knowledge is managed automatically by OpenViking** — stop writing/updating knowledge notes by hand (`knowledge/` directory, `viking://resources/knowledge`) — all knowledge is captured automatically by OpenViking session capture (events / entities / preferences); query it with the `mcp__openviking__*` tools. Keep old notes as reference; do not delete them. Decided: 2026-08-22.
+12. **Check for session collisions (avoid disasters)** — before starting work that might collide with another session (editing the same repo / workspace, or running a long task), call `mcp__crosssession__overlaps` to see whether there is any overlap; if you see `⚠ CONFLICT` or "two sessions both running git", **stop and tell the user**, and suggest opening a `git worktree` on one side (`using-git-worktrees` skill). To see what other sessions are doing right now, call `mcp__crosssession__peers`. No need to call it every turn — only when a collision is possible. Set: 2026-09-12.
 
-## 打 Code 規則（寫 code 任務適用）
-- **DRY（Don't Repeat Yourself）** — 相同邏輯／代碼重複 2 次以上就要抽做共用 function／helper／元件，唔好 copy-paste；改嘢時見到重複 code 順手抽埋。
-- **YAGNI** — 唔好 over-engineering：淨係做而家需要嘅嘢，唔好整啲用唔著嘅抽象／架構。
-- 寫完 code 要自己 **verify**（跑 test／至少實際 run 一次），唔好話「應該得」就算。
-- 複雜改動先開 todo／寫 plan 再郁手，唔好一炮過亂改。
-- Commit message 用簡潔英文（`fix: ...` / `feat: ...` / `refactor: ...` 格式）。
-- 跟返 project 已有嘅 style／convention，唔好自己發明新風格。
+## Coding rules (for coding tasks)
+- **DRY (Don't Repeat Yourself)** — the same logic / code repeated 2+ times must be extracted into a shared function / helper / component; no copy-paste. When editing, extract duplicated code you spot along the way.
+- **YAGNI** — no over-engineering: build only what is needed now; no abstractions / architecture nobody uses.
+- After writing code, **verify** it yourself (run the tests, or at least actually run it once); don't settle for "it should work".
+- For complex changes, open a todo / write a plan first; don't change everything in one shot.
+- Commit messages in concise English (`fix: ...` / `feat: ...` / `refactor: ...`).
+- Follow the project's existing style / conventions; don't invent a new style.
 
-## 技術環境備忘
-- `DSH_HOME` = `~/.dsh`（即 `C:\Users\cheun\.dsh`）：`settings.yaml`（模型/provider 設定）、`skills/`（skills）、`sessions/`（session transcripts）都喺呢度。
-- DSH 真實 source code 喺 `~/.dsh/profiles/node_modules/@deepseek-ai/*`（例如 `dsh-agent-instructions`、`dsh-mcp-client`、`dsh-skill-filesystem`），研究 DSH 內部機制時直接去度睇。
-- Web tools 用邊個 provider，睇 `~/.dsh/profiles/desktop/cordis.patch.yml` 個 `- id: web`（`searchProvider` / `fetchProvider`；現時 = DeepSeek Search/Fetch API）。改完要重啟 desktop app 先生效。
-- 模型 provider 用 `DEEPSEEK_API_KEY`（喺 `~/.dsh/.credentials.yaml`）。`OPENCODE_GO_API_KEY`（OpenCode Go 訂閱）2026-10-05 實測已失效（403 "active subscription required"），唔好再靠佢。
-- OpenViking（記憶系統）config 喺 `~/.openviking/ov.conf`，VLM credential 第一條係 `deepseek-official`（opencode-go 訂閱死咗，排最後）；server 由 `~/.openviking/start-ov.bat` 起（port 1933）。
-- 改咗呢個檔案之後，新 session 會自動載入新內容；同一個 session 入面可以靠 touch（read/write/edit）觸發更新通知。
+## Technical environment notes
+- `DSH_HOME` = `~/.dsh` (i.e. `C:\Users\cheun\.dsh`): `settings.yaml` (model/provider config), `skills/` (skills) and `sessions/` (session transcripts) all live here.
+- DSH's real source code is under `~/.dsh/profiles/node_modules/@deepseek-ai/*` (e.g. `dsh-agent-instructions`, `dsh-mcp-client`, `dsh-skill-filesystem`); read it directly when researching DSH internals.
+- Which provider the web tools use is set by `- id: web` in `~/.dsh/profiles/desktop/cordis.patch.yml` (`searchProvider` / `fetchProvider`; currently = DeepSeek Search/Fetch API). Restart the desktop app after changing it.
+- The model provider uses `DEEPSEEK_API_KEY` (in `~/.dsh/.credentials.yaml`). `OPENCODE_GO_API_KEY` (OpenCode Go subscription) was measured dead on 2026-10-05 (403 "active subscription required") — do not rely on it again.
+- OpenViking (memory system) config is in `~/.openviking/ov.conf`; the first VLM credential is `deepseek-official` (the opencode-go subscription is dead, ranked last); the server starts from `~/.openviking/start-ov.bat` (port 1933).
+- After this file is edited, new sessions load the new content automatically; within the same session, a touch (read/write/edit) triggers an update notification.
