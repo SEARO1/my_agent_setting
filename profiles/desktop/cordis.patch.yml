@@ -24,6 +24,9 @@
   name: "@deepseek-ai/dsh-client-ui-theme"
   config:
     preference: dark
+    fontSize: 10
+    codeFontSize: 10
+    terminalFontSize: 10
 - id: locale
   name: "@deepseek-ai/dsh-client-locale"
   config:
@@ -168,3 +171,33 @@
         contextWindow: 1000000
         inputModalities:
           - text
+- id: plugin-market
+  name: "@deepseek-ai/dsh-plugin-market"
+  config:
+    indexes:
+      - https://cdn.jsdelivr.net/npm/dsh-plugin-catalog/index.json
+
+# ── 2026-11-24 · codebase-memory-mcp (DeusData) — local code graph, 17 MCP tools ──
+# Release v0.12.1 binary at ~/.dsh/repos/codebase-memory-mcp/bin/codebase-memory-mcp.exe.
+# CBM_CACHE_DIR / CBM_RUNTIME_DIR are mandatory on this machine: Codex-sandbox leftover
+# ACEs (local group CodexSandboxUsers + orphan SIDs holding Modify) on AppData, .cache,
+# .dsh and Temp make the binary reject its default paths ("could not load saved runtime
+# settings" / "secure daemon endpoint could not be created"). Index lives in ~/.cbm/cache.
+# toolCallTimeoutMs is raised from the 60s default so index_repository can finish.
+- insert:
+    - id: mcp-codebase-memory
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: cbm
+        transport: stdio
+        command: 'C:\Users\cheun\.dsh\repos\codebase-memory-mcp\bin\codebase-memory-mcp.exe'
+        args: []
+        env:
+          CBM_CACHE_DIR: 'C:\Users\cheun\.cbm\cache'
+          CBM_RUNTIME_DIR: 'C:\Users\cheun\.cbm\runtime'
+        toolCallTimeoutMs: 600000
+        failOnStartupError: false
+        reconnect:
+          enabled: true
+          maxAttempts: 5
+
